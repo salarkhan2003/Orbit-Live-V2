@@ -8,21 +8,33 @@ import 'core/connectivity_service.dart';
 import 'features/auth/domain/user_role.dart';
 import 'features/auth/presentation/login_page.dart';
 import 'features/auth/presentation/signup_page.dart';
-import 'features/auth/presentation/role_selection_page.dart';
+
 import 'features/auth/presentation/passenger/passenger_auth_screen.dart';
 import 'features/auth/presentation/driver/driver_auth_screen.dart';
-import 'features/auth/presentation/driver_login_screen.dart';
-import 'features/auth/presentation/modern_role_selection_page.dart';
-import 'features/auth/presentation/conductor_login_screen.dart';
+import 'features/auth/presentation/orbit_live_role_selection_page.dart';
+import 'features/auth/presentation/enhanced_conductor_login_screen.dart';
+import 'features/auth/presentation/providers/role_selection_provider.dart';
+import 'features/travel_buddy/presentation/providers/travel_buddy_provider.dart';
+import 'features/travel_buddy/presentation/travel_buddy_screen.dart';
+import 'features/tickets/presentation/providers/ticket_provider.dart';
+import 'features/tickets/presentation/ticket_booking_screen.dart';
+import 'features/passes/presentation/providers/pass_provider.dart';
+import 'features/passes/presentation/pass_application_screen.dart';
 import 'features/passenger/presentation/passenger_dashboard.dart';
 import 'features/driver/presentation/driver_dashboard.dart';
 import 'features/guest/presentation/guest_dashboard.dart';
 import 'features/map/openstreet_map_screen.dart';
 import 'features/splash/presentation/splash_screen.dart';
-import 'features/splash/presentation/role_selection_splash_screen.dart';
+import 'features/onboarding/presentation/onboarding_screen.dart';
+import 'shared/utils/performance_optimizer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+// Removed role_selection_splash_screen - replaced with OrbitLiveRoleSelectionPage
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize performance optimizations
+  await PerformanceOptimizer.initialize();
   
   try {
     await Firebase.initializeApp();
@@ -44,6 +56,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => LocalizationProvider()),
         ChangeNotifierProvider(create: (_) => ConnectivityService()),
+        ChangeNotifierProvider(create: (_) => RoleSelectionProvider()),
+        ChangeNotifierProvider(create: (_) => TravelBuddyProvider()),
+        ChangeNotifierProvider(create: (_) => TicketProvider()),
+        ChangeNotifierProvider(create: (_) => PassProvider()),
       ],
       child: Consumer2<LocalizationProvider, ConnectivityService>(
         builder: (context, localizationProvider, connectivityService, child) {
@@ -71,15 +87,16 @@ class MyApp extends StatelessWidget {
             },
             home: AuthGate(),
             routes: {
+              '/onboarding': (context) => OnboardingScreen(),
               '/login': (context) => LoginPage(),
               '/signup': (context) => SignupPage(),
-              '/role-selection': (context) => RoleSelectionPage(),
-              '/role-selection-splash': (context) => RoleSelectionSplashScreen(),
-              '/modern-role-selection': (context) => ModernRoleSelectionPage(),
+              '/role-selection': (context) => OrbitLiveRoleSelectionPage(),
               '/passenger-auth': (context) => PassengerAuthScreen(),
               '/driver-auth': (context) => DriverAuthScreen(),
-              '/driver-login': (context) => DriverLoginScreen(),
-              '/conductor-login': (context) => ConductorLoginScreen(),
+              '/enhanced-conductor-login': (context) => EnhancedConductorLoginScreen(),
+              '/travel-buddy': (context) => TravelBuddyScreen(),
+              '/ticket-booking': (context) => TicketBookingScreen(),
+              '/pass-application': (context) => PassApplicationScreen(),
               '/passenger': (context) => PassengerDashboard(),
               '/driver': (context) => DriverDashboard(),
               '/guest-dashboard': (context) => GuestDashboard(),
@@ -92,28 +109,67 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _hasSeenOnboarding = false;
+  bool _isCheckingOnboarding = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboardingStatus();
+  }
+
+  Future<void> _checkOnboardingStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+      
+      if (mounted) {
+        setState(() {
+          _hasSeenOnboarding = hasSeenOnboarding;
+          _isCheckingOnboarding = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasSeenOnboarding = false;
+          _isCheckingOnboarding = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isCheckingOnboarding) {
+      return SplashScreen();
+    }
+
+    // Show onboarding if user hasn't seen it
+    if (!_hasSeenOnboarding) {
+      return OnboardingScreen();
+    }
+
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         if (authProvider.isLoading) {
           return SplashScreen();
         }
 
-        // Completely remove guest mode check
-        // if (authProvider.isGuestMode) {
-        //   return GuestDashboard();
-        // }
-
         if (authProvider.user == null) {
-          return RoleSelectionSplashScreen();
+          return OrbitLiveRoleSelectionPage();
         }
 
         if (authProvider.user?.role == null) {
-          return RoleSelectionPage();
+          return OrbitLiveRoleSelectionPage();
         }
 
         switch (authProvider.user?.role) {
@@ -122,7 +178,7 @@ class AuthGate extends StatelessWidget {
           case UserRole.driver:
             return DriverDashboard();
           default:
-            return RoleSelectionPage();
+            return OrbitLiveRoleSelectionPage();
         }
       },
     );
@@ -167,7 +223,11 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _user = await AuthService.getCurrentUser();
+      // Add timeout for faster loading
+      _user = await AuthService.getCurrentUser().timeout(
+        Duration(seconds: 3),
+        onTimeout: () => null,
+      );
       _isAuthenticated = _user != null;
     } catch (e) {
       _isAuthenticated = false;
@@ -235,6 +295,28 @@ class AuthProvider with ChangeNotifier {
       _user = _user!.copyWith(role: role);
       notifyListeners();
     }
+  }
+
+  void setAuthenticatedUser({
+    required String id,
+    required String email,
+    required String firstName,
+    required String lastName,
+    required String phoneNumber,
+    required UserRole role,
+  }) {
+    _user = AuthUser(
+      id: id,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      phoneNumber: phoneNumber,
+      role: role,
+    );
+    _isAuthenticated = true;
+    _isLoading = false;
+    _isGuestMode = false;
+    notifyListeners();
   }
 
   Future<void> logout() async {

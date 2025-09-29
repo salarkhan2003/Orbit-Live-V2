@@ -264,26 +264,136 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
   void _submitComplaint() {
     if (_formKey.currentState!.validate()) {
-      // In a real app, you would send this data to your backend
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Complaint submitted successfully!'),
-          backgroundColor: widget.userRole == UserRole.passenger ? Colors.blue : Colors.green,
-        ),
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    widget.userRole == UserRole.passenger ? Colors.blue : Colors.green,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text('Submitting your complaint...'),
+              ],
+            ),
+          );
+        },
       );
-      
-      // Clear the form
-      setState(() {
-        _selectedCategory = null;
-        _descriptionController.clear();
-        _busNumberController.clear();
-        _sourceController.clear();
-        _destinationController.clear();
-      });
-      
-      // Navigate back after a short delay
+
+      // Simulate API call delay
       Future.delayed(Duration(seconds: 2), () {
-        Navigator.pop(context);
+        Navigator.pop(context); // Close loading dialog
+        
+        // Generate complaint ID
+        String complaintId = 'CMP${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+        
+        // Show success dialog with complaint details
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 32,
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Success!',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your complaint has been successfully submitted and registered with our system.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Complaint Details:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text('ID: $complaintId'),
+                        Text('Bus: ${_busNumberController.text}'),
+                        Text('Route: ${_sourceController.text} → ${_destinationController.text}'),
+                        Text('Category: ${_categories.firstWhere((cat) => cat['value'] == _selectedCategory)['label']}'),
+                        Text('Status: Under Review'),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'We will investigate your complaint and get back to you within 24-48 hours. You can track the status using the complaint ID.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close success dialog
+                    
+                    // Clear the form
+                    setState(() {
+                      _selectedCategory = null;
+                      _descriptionController.clear();
+                      _busNumberController.clear();
+                      _sourceController.clear();
+                      _destinationController.clear();
+                    });
+                    
+                    // Navigate back to previous screen
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      color: widget.userRole == UserRole.passenger ? Colors.blue : Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
       });
     }
   }

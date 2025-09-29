@@ -280,7 +280,7 @@ class DriverNavigationDrawer extends StatelessWidget {
 
   void _logout(BuildContext context, AuthProvider authProvider) async {
     await authProvider.logout();
-    Navigator.pushNamedAndRemoveUntil(context, '/role-selection-splash', (route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/role-selection', (route) => false);
   }
   
   void _showLanguageSelectionDialog(BuildContext context) {

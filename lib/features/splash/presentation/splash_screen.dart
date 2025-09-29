@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../../onboarding/presentation/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -83,27 +84,29 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startAnimations() async {
-    // Start scale animation
-    await _scaleController.forward();
-
-    // Start fade animation
+    // Start all animations simultaneously for faster loading
+    _scaleController.forward();
     _fadeController.forward();
+    
+    // Start bus movement and rotation with minimal delay
+    Future.delayed(Duration(milliseconds: 200), () {
+      _busController.forward();
+    });
+    
+    Future.delayed(Duration(milliseconds: 300), () {
+      _rotationController.repeat();
+    });
 
-    // Start bus movement animation
-    await Future.delayed(Duration(milliseconds: 500));
-    _busController.forward();
-
-    // Start rotation animation
-    await Future.delayed(Duration(milliseconds: 300));
-    _rotationController.repeat();
-
-    // Navigate to role selection after animations
-    await Future.delayed(Duration(seconds: 4));
+    // Reduced total time for faster app startup
+    await Future.delayed(Duration(seconds: 2));
     _navigateToNext();
   }
 
   void _navigateToNext() {
-    Navigator.pushReplacementNamed(context, '/role-selection-splash');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => OnboardingScreen()),
+    );
   }
 
   @override

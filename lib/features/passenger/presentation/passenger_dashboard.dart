@@ -509,11 +509,29 @@ class _HomeScreen extends StatelessWidget {
             Expanded(
               child: _buildActionCard(
                 context,
+                title: 'TravelBuddy',
+                icon: Icons.people,
+                color: Colors.teal,
+                onTap: () => _navigateToTravelBuddy(context),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 15),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionCard(
+                context,
                 title: context.translate('sos'),
                 icon: Icons.emergency,
                 color: Colors.red,
                 onTap: () => _navigateToSOS(context),
               ),
+            ),
+            SizedBox(width: 15),
+            Expanded(
+              child: Container(), // Empty space for symmetry
             ),
           ],
         ),
@@ -593,18 +611,20 @@ class _HomeScreen extends StatelessWidget {
   }
 
   void _navigateToBookTicket(BuildContext context) {
-    // Show actual ticket booking
-    _showFeatureDialog(context, 'Book Ticket', 'Ticket booking feature is now available.');
+    Navigator.pushNamed(context, '/ticket-booking');
   }
 
   void _navigateToMyPasses(BuildContext context) {
-    // Show actual passes management
-    _showFeatureDialog(context, 'My Passes', 'Pass management feature is now available.');
+    Navigator.pushNamed(context, '/pass-application');
   }
 
   void _navigateToSOS(BuildContext context) {
     // Show actual emergency assistance
     _showFeatureDialog(context, 'SOS', 'Emergency assistance feature is now available.');
+  }
+
+  void _navigateToTravelBuddy(BuildContext context) {
+    Navigator.pushNamed(context, '/travel-buddy');
   }
 
   void _showFeatureDialog(BuildContext context, String title, String message) {

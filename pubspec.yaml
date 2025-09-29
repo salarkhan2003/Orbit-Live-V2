@@ -1,4 +1,4 @@
-name: orbit_live
+name: public_transport_tracker
 description: A Flutter app for public transport tracking and booking with role-based access.
 publish_to: 'none'
 
@@ -60,6 +60,8 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   hive_generator: ^2.0.1

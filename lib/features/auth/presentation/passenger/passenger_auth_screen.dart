@@ -490,8 +490,15 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
     return Center(
       child: TextButton.icon(
         onPressed: () {
-          // Skip login and go to role selection
-          Provider.of<main_app.AuthProvider>(context, listen: false).setGuestUser(UserRole.passenger);
+          // Skip login and create guest passenger user
+          Provider.of<main_app.AuthProvider>(context, listen: false).setAuthenticatedUser(
+            id: 'passenger_guest_${DateTime.now().millisecondsSinceEpoch}',
+            email: 'guest@passenger.com',
+            firstName: 'Guest',
+            lastName: 'Passenger',
+            phoneNumber: '',
+            role: UserRole.passenger,
+          );
           Navigator.pushReplacementNamed(context, '/passenger');
         },
         icon: Icon(Icons.arrow_forward, color: Colors.grey),
