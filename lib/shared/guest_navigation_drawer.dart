@@ -42,7 +42,7 @@ class GuestNavigationDrawer extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     child: Icon(
                       Icons.person_outline,
                       size: 30,
@@ -82,7 +82,7 @@ class GuestNavigationDrawer extends StatelessWidget {
               },
             ),
             
-            Divider(color: Colors.white.withOpacity(0.3)),
+            Divider(color: Colors.white.withValues(alpha: 0.3)),
             
             // View Routes
             ListTile(
@@ -125,7 +125,7 @@ class GuestNavigationDrawer extends StatelessWidget {
               },
             ),
             
-            Divider(color: Colors.white.withOpacity(0.3)),
+            Divider(color: Colors.white.withValues(alpha: 0.3)),
             
             // Create Account
             ListTile(
@@ -153,7 +153,7 @@ class GuestNavigationDrawer extends StatelessWidget {
               },
             ),
             
-            Divider(color: Colors.white.withOpacity(0.3)),
+            Divider(color: Colors.white.withValues(alpha: 0.3)),
             
             // About
             ListTile(

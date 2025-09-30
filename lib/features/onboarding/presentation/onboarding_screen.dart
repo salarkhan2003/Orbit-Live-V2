@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -235,11 +236,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             width: 150,
                             height: 150,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 20,
                                   spreadRadius: 5,
                                   offset: Offset(0, 10),
@@ -257,7 +258,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     },
                   ),
                   
-                  SizedBox(height: 50),
+                  SizedBox(height: 30),
                   
                   // Title
                   Text(
@@ -284,47 +285,51 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     textAlign: TextAlign.center,
                   ),
                   
-                  SizedBox(height: 30),
+                  SizedBox(height: 20),
                   
                   // Description
                   Text(
                     data.description,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   
-                  SizedBox(height: 40),
+                  SizedBox(height: 30),
                   
                   // Features
-                  Column(
-                    children: data.features.map((feature) {
-                      return Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check_circle,
-                              color: Colors.white,
-                              size: 20,
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: data.features.map((feature) {
+                          return Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  feature,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 12),
-                            Text(
-                              feature,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -355,11 +360,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  void _skipOnboarding() {
+  void _skipOnboarding() async {
+    // Mark onboarding as seen
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
     Navigator.pushReplacementNamed(context, '/role-selection');
   }
 
-  void _finishOnboarding() {
+  void _finishOnboarding() async {
+    // Mark onboarding as seen
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
     Navigator.pushReplacementNamed(context, '/role-selection');
   }
 }

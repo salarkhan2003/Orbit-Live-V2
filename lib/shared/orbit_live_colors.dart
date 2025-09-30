@@ -12,6 +12,13 @@ class OrbitLiveColors {
   static const Color lightOrange = Color(0xFFFF8A50);
   static const Color lightBlue = Color(0xFF74B9FF);
   
+  // Additional vibrant colors for enhanced UI
+  static const Color vibrantPurple = Color(0xFF9B5DE5);
+  static const Color vibrantPink = Color(0xFFF15BB5);
+  static const Color vibrantYellow = Color(0xFFFFEE32);
+  static const Color vibrantGreen = Color(0xFF00BB00);
+  static const Color vibrantRed = Color(0xFFFF0000);
+  
   // Neutral colors
   static const Color white = Color(0xFFFFFFFF);
   static const Color lightGray = Color(0xFFF8F9FA);
@@ -44,6 +51,32 @@ class OrbitLiveColors {
   static const List<Color> blueGradient = [
     Color(0xFF4A90E2),
     Color(0xFF74B9FF),
+  ];
+  
+  // New vibrant gradients for enhanced UI
+  static const List<Color> purpleGradient = [
+    Color(0xFF9B5DE5),
+    Color(0xFF7B3DC5),
+  ];
+  
+  static const List<Color> pinkGradient = [
+    Color(0xFFF15BB5),
+    Color(0xFFD13B95),
+  ];
+  
+  static const List<Color> yellowGradient = [
+    Color(0xFFFFEE32),
+    Color(0xFFFFCE00),
+  ];
+  
+  static const List<Color> greenGradient = [
+    Color(0xFF00BB00),
+    Color(0xFF009900),
+  ];
+  
+  static const List<Color> redGradient = [
+    Color(0xFFFF0000),
+    Color(0xFFCC0000),
   ];
   
   // Card shadow colors

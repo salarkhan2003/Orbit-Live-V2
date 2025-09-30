@@ -154,7 +154,7 @@ class _OpenStreetMapScreenState extends State<OpenStreetMapScreen> {
       return Polyline(
         points: points,
         strokeWidth: _isLowBandwidth ? 2 : 4,
-        color: Colors.blue.withOpacity(0.7),
+        color: Colors.blue.withValues(alpha: 0.7),
       );
     }).toList();
     
@@ -203,7 +203,7 @@ class _OpenStreetMapScreenState extends State<OpenStreetMapScreen> {
           LatLng(12.9516, 77.5746),
         ],
         strokeWidth: _isLowBandwidth ? 2 : 4,
-        color: Colors.blue.withOpacity(0.7),
+        color: Colors.blue.withValues(alpha: 0.7),
       ),
       Polyline(
         points: [
@@ -212,7 +212,7 @@ class _OpenStreetMapScreenState extends State<OpenStreetMapScreen> {
           LatLng(12.9616, 77.5846),
         ],
         strokeWidth: _isLowBandwidth ? 2 : 4,
-        color: Colors.green.withOpacity(0.7),
+        color: Colors.green.withValues(alpha: 0.7),
       ),
     ];
     

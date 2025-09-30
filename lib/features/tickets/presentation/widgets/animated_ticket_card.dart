@@ -109,12 +109,12 @@ class _AnimatedTicketCardState extends State<AnimatedTicketCard>
             offset: Offset(0, _floatAnimation.value),
             child: Container(
               height: 220,
-              margin: const EdgeInsets.symmetric(horizontal: 20),
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: OrbitLiveColors.primaryTeal.withOpacity(0.3 * _glowAnimation.value),
+                    color: OrbitLiveColors.primaryTeal.withValues(alpha: 0.3 * _glowAnimation.value),
                     blurRadius: 20 * _glowAnimation.value,
                     spreadRadius: 5 * _glowAnimation.value,
                     offset: const Offset(0, 10),
@@ -130,7 +130,13 @@ class _AnimatedTicketCardState extends State<AnimatedTicketCard>
                     transform: Matrix4.identity()
                       ..setEntry(3, 2, 0.001)
                       ..rotateY(_flipAnimation.value * 3.14159),
-                    child: isShowingFront ? _buildFrontCard() : _buildBackCard(),
+                    child: isShowingFront 
+                        ? _buildFrontCard() 
+                        : Transform(
+                            transform: Matrix4.rotationY(3.14159), // Flip the back content to make it readable
+                            alignment: Alignment.center,
+                            child: _buildBackCard(),
+                          ),
                   );
                 },
               ),
@@ -148,7 +154,7 @@ class _AnimatedTicketCardState extends State<AnimatedTicketCard>
         gradient: LinearGradient(
           colors: [
             OrbitLiveColors.primaryTeal,
-            OrbitLiveColors.primaryTeal.withOpacity(0.8),
+            OrbitLiveColors.primaryTeal.withValues(alpha: 0.8),
             OrbitLiveColors.primaryBlue,
           ],
           begin: Alignment.topLeft,
@@ -185,7 +191,7 @@ class _AnimatedTicketCardState extends State<AnimatedTicketCard>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -199,82 +205,30 @@ class _AnimatedTicketCardState extends State<AnimatedTicketCard>
                   ],
                 ),
                 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 
                 // Route info
                 Text(
-                  widget.ticket.routeName,
-                  style: OrbitLiveTextStyles.cardTitle.copyWith(
+                  '${widget.ticket.source} → ${widget.ticket.destination}',
+                  style: OrbitLiveTextStyles.bodyMedium.copyWith(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 
                 const SizedBox(height: 8),
                 
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'FROM',
-                            style: OrbitLiveTextStyles.bodySmall.copyWith(
-                              color: Colors.white70,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          Text(
-                            widget.ticket.source,
-                            style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'TO',
-                            style: OrbitLiveTextStyles.bodySmall.copyWith(
-                              color: Colors.white70,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          Text(
-                            widget.ticket.destination,
-                            style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.end,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                // Date and time
+                Text(
+                  '${widget.ticket.validFrom.day.toString().padLeft(2, '0')}/${widget.ticket.validFrom.month.toString().padLeft(2, '0')}/${widget.ticket.validFrom.year} • ${widget.ticket.validFrom.hour.toString().padLeft(2, '0')}:${widget.ticket.validFrom.minute.toString().padLeft(2, '0')}',
+                  style: OrbitLiveTextStyles.bodySmall.copyWith(
+                    color: Colors.white70,
+                  ),
                 ),
                 
                 const Spacer(),
                 
-                // Bottom info
+                // Bus info
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -282,14 +236,13 @@ class _AnimatedTicketCardState extends State<AnimatedTicketCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'TICKET ID',
+                          'Route',
                           style: OrbitLiveTextStyles.bodySmall.copyWith(
                             color: Colors.white70,
-                            letterSpacing: 1,
                           ),
                         ),
                         Text(
-                          widget.ticket.id.substring(0, 8).toUpperCase(),
+                          widget.ticket.routeName,
                           style: OrbitLiveTextStyles.bodyMedium.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -298,18 +251,35 @@ class _AnimatedTicketCardState extends State<AnimatedTicketCard>
                       ],
                     ),
                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'FARE',
+                          'Seat',
                           style: OrbitLiveTextStyles.bodySmall.copyWith(
                             color: Colors.white70,
-                            letterSpacing: 1,
                           ),
                         ),
                         Text(
-                          '₹${widget.ticket.fare.toStringAsFixed(0)}',
-                          style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                          widget.ticket.seatNumber ?? 'N/A',
+                          style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Fare',
+                          style: OrbitLiveTextStyles.bodySmall.copyWith(
+                            color: Colors.white70,
+                          ),
+                        ),
+                        Text(
+                          '₹${widget.ticket.fare.toStringAsFixed(2)}',
+                          style: OrbitLiveTextStyles.bodyMedium.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
@@ -321,175 +291,119 @@ class _AnimatedTicketCardState extends State<AnimatedTicketCard>
               ],
             ),
           ),
-          
-          // Tap indicator
-          Positioned(
-            bottom: 10,
-            right: 10,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'TAP TO FLIP',
-                style: OrbitLiveTextStyles.bodySmall.copyWith(
-                  color: Colors.white70,
-                  fontSize: 10,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildBackCard() {
-    return Transform(
-      alignment: Alignment.center,
-      transform: Matrix4.identity()..rotateY(3.14159),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: [
-              OrbitLiveColors.primaryBlue,
-              OrbitLiveColors.primaryBlue.withOpacity(0.8),
-              OrbitLiveColors.primaryTeal,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            Colors.grey.shade100,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Stack(
-          children: [
-            // Background pattern
-            Positioned.fill(
-              child: CustomPaint(
-                painter: HologramPatternPainter(),
-              ),
+      ),
+      child: Stack(
+        children: [
+          // Background pattern
+          Positioned.fill(
+            child: CustomPaint(
+              painter: HologramPatternPainter(),
             ),
-            
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  // QR Code section
-                  Expanded(
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AnimatedBuilder(
-                              animation: _glowAnimation,
-                              builder: (context, child) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: OrbitLiveColors.primaryTeal.withOpacity(0.3 * _glowAnimation.value),
-                                        blurRadius: 10 * _glowAnimation.value,
-                                        spreadRadius: 2 * _glowAnimation.value,
-                                      ),
-                                    ],
-                                  ),
-                                  child: QrImageView(
-                                    data: widget.ticket.qrCode,
-                                    version: QrVersions.auto,
-                                    size: 120,
-                                    backgroundColor: Colors.white,
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'SCAN TO VALIDATE',
-                              style: OrbitLiveTextStyles.bodySmall.copyWith(
-                                color: OrbitLiveColors.darkGray,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ],
+          ),
+          
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ORBIT LIVE',
+                      style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                        color: OrbitLiveColors.primaryTeal,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: OrbitLiveColors.primaryTeal.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        widget.ticket.typeDisplayName.toUpperCase(),
+                        style: OrbitLiveTextStyles.bodySmall.copyWith(
+                          color: OrbitLiveColors.primaryTeal,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Validity info
-                  Container(
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // QR Code
+                Center(
+                  child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Valid From:',
-                              style: OrbitLiveTextStyles.bodySmall.copyWith(
-                                color: Colors.white70,
-                              ),
-                            ),
-                            Text(
-                              '${widget.ticket.validFrom.day}/${widget.ticket.validFrom.month}/${widget.ticket.validFrom.year}',
-                              style: OrbitLiveTextStyles.bodySmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Valid Until:',
-                              style: OrbitLiveTextStyles.bodySmall.copyWith(
-                                color: Colors.white70,
-                              ),
-                            ),
-                            Text(
-                              '${widget.ticket.validUntil.day}/${widget.ticket.validUntil.month}/${widget.ticket.validUntil.year}',
-                              style: OrbitLiveTextStyles.bodySmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
+                    child: QrImageView(
+                      data: widget.ticket.qrCode,
+                      version: QrVersions.auto,
+                      size: 120,
+                      backgroundColor: Colors.white,
+                    ),
                   ),
-                ],
-              ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Validation text
+                Text(
+                  'Show this QR code to the conductor for validation',
+                  style: OrbitLiveTextStyles.bodySmall.copyWith(
+                    color: OrbitLiveColors.darkGray,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                
+                const Spacer(),
+                
+                // Ticket ID
+                Text(
+                  'Ticket ID: ${widget.ticket.id.substring(0, 8).toUpperCase()}',
+                  style: OrbitLiveTextStyles.bodySmall.copyWith(
+                    color: OrbitLiveColors.darkGray,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -499,29 +413,27 @@ class HologramPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
+      ..color = Colors.white.withValues(alpha: 0.1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
 
-    // Draw geometric pattern
-    for (int i = 0; i < 10; i++) {
-      final path = Path();
-      final startX = (size.width / 10) * i;
-      final startY = 0.0;
-      
-      path.moveTo(startX, startY);
-      path.lineTo(startX + 20, size.height * 0.3);
-      path.lineTo(startX + 40, size.height * 0.6);
-      path.lineTo(startX + 60, size.height);
-      
-      canvas.drawPath(path, paint);
+    // Draw diagonal lines
+    for (int i = 0; i < (size.width + size.height).toInt(); i += 20) {
+      canvas.drawLine(
+        Offset(i.toDouble(), 0),
+        Offset((i - size.height).toDouble(), size.height),
+        paint,
+      );
     }
 
     // Draw circles
     for (int i = 0; i < 5; i++) {
       canvas.drawCircle(
-        Offset(size.width * 0.8, size.height * 0.2 * (i + 1)),
-        10 + (i * 5),
+        Offset(
+          size.width * 0.2 + (i * size.width * 0.15),
+          size.height * 0.3 + (i * size.height * 0.1),
+        ),
+        15,
         paint,
       );
     }

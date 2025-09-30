@@ -187,14 +187,14 @@ class _RoleCardState extends State<RoleCard>
           boxShadow: [
             // Main shadow
             BoxShadow(
-              color: widget.gradientColors.first.withOpacity(0.3),
+              color: widget.gradientColors.first.withValues(alpha: 0.3),
               blurRadius: ResponsiveHelper.getResponsiveElevation(context),
               offset: const Offset(0, 4),
             ),
             // Selection glow
             if (widget.isSelected && widget.showSelectionIndicator)
               BoxShadow(
-                color: widget.gradientColors.first.withOpacity(
+                color: widget.gradientColors.first.withValues(alpha: 
                   0.4 * _glowAnimation.value,
                 ),
                 blurRadius: 20 + (10 * _glowAnimation.value),
@@ -249,7 +249,7 @@ class _RoleCardState extends State<RoleCard>
             shape: BoxShape.circle,
             color: widget.isSelected 
                 ? Colors.white
-                : Colors.white.withOpacity(0.3),
+                : Colors.white.withValues(alpha: 0.3),
             border: Border.all(
               color: Colors.white,
               width: 2,
@@ -329,7 +329,7 @@ class PassengerRoleCard extends StatelessWidget {
       width: 80,
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Icon(
@@ -377,7 +377,7 @@ class DriverRoleCard extends StatelessWidget {
       width: 80,
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Icon(

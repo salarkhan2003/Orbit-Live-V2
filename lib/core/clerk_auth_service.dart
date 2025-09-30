@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import '../features/auth/domain/user_role.dart';
 
 class AuthService {
@@ -24,9 +25,9 @@ class AuthService {
         ),
       );
       _prefs = await SharedPreferences.getInstance();
-      print('✅ Firebase initialized successfully with project: orbit-live');
+      debugPrint('✅ Firebase initialized successfully with project: orbit-live');
     } catch (e) {
-      print('❌ Firebase initialization failed: $e');
+      debugPrint('❌ Firebase initialization failed: $e');
       // Fallback to SharedPreferences only
       _prefs = await SharedPreferences.getInstance();
     }
@@ -76,7 +77,7 @@ class AuthService {
         role: role,
       );
     } catch (e) {
-      print('Error getting current user: $e');
+      debugPrint('Error getting current user: $e');
       return null;
     }
   }
@@ -93,7 +94,7 @@ class AuthService {
       }
       throw Exception('Sign in failed');
     } catch (e) {
-      print('Firebase sign in error: $e');
+      debugPrint('Firebase sign in error: $e');
 
       // Fallback to mock authentication for development
       if (email.isNotEmpty && password.length >= 6) {
@@ -123,7 +124,7 @@ class AuthService {
       }
       throw Exception('Sign up failed');
     } catch (e) {
-      print('Firebase sign up error: $e');
+      debugPrint('Firebase sign up error: $e');
 
       // Fallback to mock authentication for development
       if (email.isNotEmpty && password.length >= 6) {
@@ -157,7 +158,7 @@ class AuthService {
       }
       throw Exception('Google sign in failed');
     } catch (e) {
-      print('Google sign in error: $e');
+      debugPrint('Google sign in error: $e');
       throw Exception('Google sign in failed: ${e.toString()}');
     }
   }
@@ -172,7 +173,7 @@ class AuthService {
         await _prefs?.setString('user_role', role.name);
       }
     } catch (e) {
-      print('Error setting role: $e');
+      debugPrint('Error setting role: $e');
     }
   }
 
@@ -183,7 +184,7 @@ class AuthService {
       // Clear local data
       await _prefs?.clear();
     } catch (e) {
-      print('Sign out error: $e');
+      debugPrint('Sign out error: $e');
     }
   }
 
@@ -205,7 +206,7 @@ class AuthService {
         timeout: Duration(seconds: 60),
       );
     } catch (e) {
-      print('Phone verification error: $e');
+      debugPrint('Phone verification error: $e');
       throw Exception('Failed to send verification code');
     }
   }

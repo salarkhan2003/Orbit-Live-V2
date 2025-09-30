@@ -54,7 +54,8 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
       CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
     );
     
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.02).animate(
+    // Remove rotation animation - keep it at 0
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(
       CurvedAnimation(parent: _rotationController, curve: Curves.easeInOut),
     );
     
@@ -67,8 +68,8 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
     // Start shimmer animation
     _shimmerController.repeat();
     
-    // Start subtle rotation animation
-    _rotationController.repeat(reverse: true);
+    // Don't start rotation animation - keep it at 0
+    // _rotationController.repeat(reverse: true);
     
     // Start glow animation
     _glowController.repeat(reverse: true);
@@ -90,13 +91,13 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
         return Transform.rotate(
           angle: _rotationAnimation.value,
           child: Container(
-            height: 240,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
+            height: 200,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: _getPassColor().withOpacity(0.3 * _glowAnimation.value),
+                  color: _getPassColor().withValues(alpha: 0.3 * _glowAnimation.value),
                   blurRadius: 25 * _glowAnimation.value,
                   spreadRadius: 8 * _glowAnimation.value,
                   offset: const Offset(0, 15),
@@ -137,7 +138,7 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                             gradient: LinearGradient(
                               colors: [
                                 Colors.transparent,
-                                Colors.white.withOpacity(0.3),
+                                Colors.white.withValues(alpha: 0.3),
                                 Colors.transparent,
                               ],
                               stops: const [0.0, 0.5, 1.0],
@@ -152,7 +153,7 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                   
                   // Content
                   Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -168,20 +169,22 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                                   style: OrbitLiveTextStyles.bodyLarge.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    letterSpacing: 3,
+                                    letterSpacing: 2,
+                                    fontSize: 16,
                                   ),
                                 ),
                                 Text(
                                   'TRANSPORT PASS',
                                   style: OrbitLiveTextStyles.bodySmall.copyWith(
                                     color: Colors.white70,
-                                    letterSpacing: 2,
+                                    letterSpacing: 1,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
@@ -192,32 +195,34 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1,
+                                  fontSize: 10,
                                 ),
                               ),
                             ),
                           ],
                         ),
                         
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         
                         // Holder name
                         Text(
                           widget.pass.holderName.toUpperCase(),
                           style: OrbitLiveTextStyles.cardTitle.copyWith(
                             color: Colors.white,
-                            fontSize: 22,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1,
                           ),
                         ),
                         
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         
                         Text(
                           widget.pass.categoryDisplayName.toUpperCase(),
                           style: OrbitLiveTextStyles.bodyMedium.copyWith(
                             color: Colors.white70,
                             letterSpacing: 1,
+                            fontSize: 12,
                           ),
                         ),
                         
@@ -236,6 +241,7 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                                   style: OrbitLiveTextStyles.bodySmall.copyWith(
                                     color: Colors.white70,
                                     letterSpacing: 1,
+                                    fontSize: 10,
                                   ),
                                 ),
                                 Text(
@@ -243,14 +249,16 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                                   style: OrbitLiveTextStyles.bodyMedium.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 12,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 6),
                                 Text(
                                   'VALID UNTIL',
                                   style: OrbitLiveTextStyles.bodySmall.copyWith(
                                     color: Colors.white70,
                                     letterSpacing: 1,
+                                    fontSize: 10,
                                   ),
                                 ),
                                 Text(
@@ -258,6 +266,7 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                                   style: OrbitLiveTextStyles.bodyMedium.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
@@ -265,13 +274,13 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                             
                             // QR Code
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -280,7 +289,7 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                               child: QrImageView(
                                 data: widget.pass.qrCode,
                                 version: QrVersions.auto,
-                                size: 60,
+                                size: 50,
                                 backgroundColor: Colors.white,
                               ),
                             ),
@@ -292,22 +301,22 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                   
                   // Floating elements
                   Positioned(
-                    top: 20,
-                    right: 20,
+                    top: 16,
+                    right: 16,
                     child: AnimatedBuilder(
                       animation: _glowAnimation,
                       builder: (context, child) {
                         return Transform.scale(
                           scale: 0.8 + (0.2 * _glowAnimation.value),
                           child: Container(
-                            width: 12,
-                            height: 12,
+                            width: 10,
+                            height: 10,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.6),
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.white.withOpacity(0.4),
+                                  color: Colors.white.withValues(alpha: 0.4),
                                   blurRadius: 8 * _glowAnimation.value,
                                   spreadRadius: 2 * _glowAnimation.value,
                                 ),
@@ -320,22 +329,22 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
                   ),
                   
                   Positioned(
-                    bottom: 30,
-                    left: 30,
+                    bottom: 24,
+                    left: 24,
                     child: AnimatedBuilder(
                       animation: _glowAnimation,
                       builder: (context, child) {
                         return Transform.scale(
                           scale: 0.6 + (0.4 * _glowAnimation.value),
                           child: Container(
-                            width: 8,
-                            height: 8,
+                            width: 6,
+                            height: 6,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.4),
+                              color: Colors.white.withValues(alpha: 0.4),
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.white.withOpacity(0.3),
+                                  color: Colors.white.withValues(alpha: 0.3),
                                   blurRadius: 6 * _glowAnimation.value,
                                   spreadRadius: 1 * _glowAnimation.value,
                                 ),
@@ -352,6 +361,178 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildFrontCard() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            OrbitLiveColors.primaryTeal,
+            OrbitLiveColors.primaryTeal.withValues(alpha: 0.8),
+            OrbitLiveColors.primaryBlue,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Background pattern
+          Positioned.fill(
+            child: CustomPaint(
+              painter: HologramPatternPainter(),
+            ),
+          ),
+          
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ORBIT LIVE',
+                          style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        Text(
+                          'TRANSPORT PASS',
+                          style: OrbitLiveTextStyles.bodySmall.copyWith(
+                            color: Colors.white70,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        widget.pass.typeDisplayName.toUpperCase(),
+                        style: OrbitLiveTextStyles.bodySmall.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Holder name
+                Text(
+                  widget.pass.holderName.toUpperCase(),
+                  style: OrbitLiveTextStyles.cardTitle.copyWith(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                
+                const SizedBox(height: 6),
+                
+                Text(
+                  widget.pass.categoryDisplayName.toUpperCase(),
+                  style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                    color: Colors.white70,
+                    letterSpacing: 1,
+                    fontSize: 12,
+                  ),
+                ),
+                
+                const Spacer(),
+                
+                // Bottom section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Pass details
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'PASS ID',
+                          style: OrbitLiveTextStyles.bodySmall.copyWith(
+                            color: Colors.white70,
+                            letterSpacing: 1,
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          widget.pass.id.substring(0, 8).toUpperCase(),
+                          style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'VALID UNTIL',
+                          style: OrbitLiveTextStyles.bodySmall.copyWith(
+                            color: Colors.white70,
+                            letterSpacing: 1,
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          '${widget.pass.validUntil.day.toString().padLeft(2, '0')}/${widget.pass.validUntil.month.toString().padLeft(2, '0')}/${widget.pass.validUntil.year}',
+                          style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    // QR Code
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: QrImageView(
+                        data: widget.pass.qrCode,
+                        version: QrVersions.auto,
+                        size: 50,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -373,25 +554,25 @@ class _AnimatedPassCardState extends State<AnimatedPassCard>
       case PassCategory.general:
         return [
           OrbitLiveColors.primaryTeal,
-          OrbitLiveColors.primaryTeal.withOpacity(0.8),
+          OrbitLiveColors.primaryTeal.withValues(alpha: 0.8),
           OrbitLiveColors.primaryBlue,
         ];
       case PassCategory.student:
         return [
           Colors.blue,
-          Colors.blue.withOpacity(0.8),
+          Colors.blue.withValues(alpha: 0.8),
           Colors.lightBlue,
         ];
       case PassCategory.senior:
         return [
           Colors.purple,
-          Colors.purple.withOpacity(0.8),
+          Colors.purple.withValues(alpha: 0.8),
           Colors.deepPurple,
         ];
       case PassCategory.employee:
         return [
           Colors.orange,
-          Colors.orange.withOpacity(0.8),
+          Colors.orange.withValues(alpha: 0.8),
           Colors.deepOrange,
         ];
     }
@@ -402,7 +583,7 @@ class TopographicPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withValues(alpha: 0.1)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -448,3 +629,36 @@ class TopographicPatternPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+class HologramPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    // Draw diagonal lines
+    for (int i = 0; i < (size.width + size.height).toInt(); i += 20) {
+      canvas.drawLine(
+        Offset(i.toDouble(), 0),
+        Offset((i - size.height).toDouble(), size.height),
+        paint,
+      );
+    }
+
+    // Draw circles
+    for (int i = 0; i < 5; i++) {
+      canvas.drawCircle(
+        Offset(
+          size.width * 0.2 + (i * size.width * 0.15),
+          size.height * 0.3 + (i * size.height * 0.1),
+        ),
+        15,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}

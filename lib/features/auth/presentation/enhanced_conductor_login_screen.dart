@@ -363,10 +363,10 @@ class _EnhancedConductorLoginScreenState extends State<EnhancedConductorLoginScr
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: OrbitLiveColors.error.withOpacity(0.1),
+                  color: OrbitLiveColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: OrbitLiveColors.error.withOpacity(0.3),
+                    color: OrbitLiveColors.error.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(

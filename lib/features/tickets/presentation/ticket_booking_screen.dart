@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../shared/orbit_live_colors.dart';
 import '../../../shared/orbit_live_text_styles.dart';
 import '../../../shared/components/app_header.dart';
-import '../../../shared/utils/responsive_helper.dart';
 import '../domain/ticket_models.dart';
 import 'widgets/animated_ticket_card.dart';
 import 'widgets/payment_method_selector.dart';
@@ -185,63 +184,79 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
           children: [
             Text(
               'Select Journey',
-              style: OrbitLiveTextStyles.cardTitle.copyWith(
-                fontSize: 24,
+              style: OrbitLiveTextStyles.displaySmall.copyWith(
                 color: OrbitLiveColors.black,
               ),
             ),
             const SizedBox(height: 24),
             
-            // Source field
-            _buildLocationField(
+            // Source field with enhanced styling
+            _buildEnhancedLocationField(
               controller: _sourceController,
               label: 'From',
               hint: 'Enter starting point',
               icon: Icons.location_on,
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             
-            // Swap button
-            Center(
-              child: IconButton(
-                onPressed: _swapLocations,
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: OrbitLiveColors.primaryTeal.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.swap_vert,
-                    color: OrbitLiveColors.primaryTeal,
-                  ),
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Destination field
-            _buildLocationField(
+            // Destination field with enhanced styling
+            _buildEnhancedLocationField(
               controller: _destinationController,
               label: 'To',
               hint: 'Enter destination',
               icon: Icons.location_on,
             ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 30),
             
-            // Available routes
-            if (_sourceController.text.isNotEmpty && _destinationController.text.isNotEmpty)
-              _buildAvailableRoutes(),
+            // Popular routes section
+            Text(
+              'Popular Routes',
+              style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: OrbitLiveColors.black,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Route cards with enhanced styling
+            _buildRouteCards(),
+            
+            const SizedBox(height: 30),
+            
+            // Continue button
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: _sourceController.text.isNotEmpty && 
+                         _destinationController.text.isNotEmpty
+                    ? () => _nextStep()
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: OrbitLiveColors.primaryTeal,
+                  foregroundColor: Colors.white,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  disabledBackgroundColor: Colors.grey.shade300,
+                  disabledForegroundColor: Colors.grey.shade500,
+                ),
+                child: Text(
+                  'Continue',
+                  style: OrbitLiveTextStyles.buttonPrimary,
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLocationField({
+  Widget _buildEnhancedLocationField({
     required TextEditingController controller,
     required String label,
     required String hint,
@@ -249,11 +264,15 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [Colors.white, Colors.grey.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -261,271 +280,375 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
       ),
       child: TextField(
         controller: controller,
-        onChanged: (value) => setState(() {}),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
           prefixIcon: Icon(icon, color: OrbitLiveColors.primaryTeal),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 15,
           ),
-          filled: true,
-          fillColor: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvailableRoutes() {
-    // Mock routes data
-    final routes = [
-      BusRoute(
-        id: '1',
-        name: 'Route 101',
-        source: _sourceController.text,
-        destination: _destinationController.text,
-        stops: ['Stop A', 'Stop B', 'Stop C'],
-        estimatedDuration: const Duration(minutes: 45),
-        fare: 25.0,
-        timings: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
-      ),
-      BusRoute(
-        id: '2',
-        name: 'Express 202',
-        source: _sourceController.text,
-        destination: _destinationController.text,
-        stops: ['Stop A', 'Stop C'],
-        estimatedDuration: const Duration(minutes: 30),
-        fare: 35.0,
-        timings: ['09:00', '11:00', '13:00', '15:00', '17:00'],
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Available Routes',
-          style: OrbitLiveTextStyles.bodyLarge.copyWith(
-            fontWeight: FontWeight.w600,
+          labelStyle: TextStyle(
             color: OrbitLiveColors.black,
+            fontWeight: FontWeight.w500,
+          ),
+          hintStyle: TextStyle(
+            color: Colors.grey,
           ),
         ),
-        const SizedBox(height: 16),
-        ...routes.map((route) => _buildRouteCard(route)),
-      ],
+      ),
     );
   }
 
-  Widget _buildRouteCard(BusRoute route) {
-    final isSelected = _selectedRoute?.id == route.id;
+  Widget _buildRouteCards() {
+    // Mock route data for Guntur
+    final routes = [
+      {
+        'id': '1',
+        'name': 'Guntur Central - Tenali',
+        'source': 'Guntur Central',
+        'destination': 'Tenali',
+        'duration': '25 mins',
+        'fare': '₹25',
+        'timings': ['6:00 AM', '7:30 AM', '9:00 AM', '11:30 AM', '2:00 PM', '4:30 PM', '6:00 PM', '8:30 PM']
+      },
+      {
+        'id': '2',
+        'name': 'RTC Bus Stand - Mangalagiri',
+        'source': 'RTC Bus Stand',
+        'destination': 'Mangalagiri',
+        'duration': '45 mins',
+        'fare': '₹40',
+        'timings': ['7:00 AM', '9:30 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM']
+      },
+      {
+        'id': '3',
+        'name': 'Lakshmipuram - Namburu',
+        'source': 'Lakshmipuram',
+        'destination': 'Namburu',
+        'duration': '35 mins',
+        'fare': '₹30',
+        'timings': ['6:30 AM', '8:00 AM', '10:30 AM', '1:00 PM', '3:30 PM', '6:30 PM', '9:30 PM']
+      },
+      {
+        'id': '4',
+        'name': 'Gurazala - Pedakakani',
+        'source': 'Gurazala',
+        'destination': 'Pedakakani',
+        'duration': '50 mins',
+        'fare': '₹35',
+        'timings': ['7:15 AM', '10:15 AM', '1:15 PM', '4:15 PM', '7:15 PM', '10:15 PM']
+      },
+    ];
     
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isSelected ? OrbitLiveColors.primaryTeal : Colors.transparent,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _selectedRoute = route;
-          });
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    route.name,
-                    style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    '₹${route.fare.toStringAsFixed(0)}',
-                    style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                      color: OrbitLiveColors.primaryTeal,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${route.estimatedDuration.inMinutes} min journey',
-                style: OrbitLiveTextStyles.bodyMedium.copyWith(
-                  color: OrbitLiveColors.mediumGray,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: route.timings.take(4).map((time) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: OrbitLiveColors.primaryTeal.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      time,
-                      style: OrbitLiveTextStyles.bodySmall.copyWith(
-                        color: OrbitLiveColors.primaryTeal,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  );
-                }).toList(),
+    return Column(
+      children: routes.map((route) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 15),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Colors.grey.shade50],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-        ),
-      ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(15),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: OrbitLiveColors.tealGradient,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.directions_bus, color: Colors.white),
+            ),
+            title: Text(
+              route['name'] as String,
+              style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: OrbitLiveColors.black,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 5),
+                Text(
+                  '${route['source'] as String} → ${route['destination'] as String}',
+                  style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                    color: OrbitLiveColors.darkGray,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Icon(Icons.access_time, size: 16, color: Colors.grey),
+                    const SizedBox(width: 5),
+                    Text(
+                      route['duration'] as String,
+                      style: OrbitLiveTextStyles.bodySmall.copyWith(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Icon(Icons.currency_rupee, size: 16, color: Colors.grey),
+                    const SizedBox(width: 5),
+                    Text(
+                      route['fare'] as String,
+                      style: OrbitLiveTextStyles.bodySmall.copyWith(
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+            onTap: () {
+              _sourceController.text = route['source'] as String;
+              _destinationController.text = route['destination'] as String;
+              
+              // Create BusRoute object from route data
+              final routeFare = double.parse((route['fare'] as String).replaceAll('₹', ''));
+              final durationParts = (route['duration'] as String).split(' ');
+              final durationMinutes = int.parse(durationParts[0]);
+              
+              setState(() {
+                _selectedRoute = BusRoute(
+                  id: route['id'] as String,
+                  name: route['name'] as String,
+                  source: route['source'] as String,
+                  destination: route['destination'] as String,
+                  stops: [], // Empty for now
+                  estimatedDuration: Duration(minutes: durationMinutes),
+                  fare: routeFare,
+                  timings: List<String>.from(route['timings'] as List),
+                );
+              });
+              
+              _nextStep();
+            },
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildTicketTypeStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Choose Ticket Type',
-            style: OrbitLiveTextStyles.cardTitle.copyWith(
-              fontSize: 24,
-              color: OrbitLiveColors.black,
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          _buildTicketTypeCard(
-            type: TicketType.oneTime,
-            title: 'One-time Ticket',
-            description: 'Single journey ticket',
-            price: _selectedRoute?.fare ?? 0,
-            icon: Icons.confirmation_number,
-          ),
-          
-          _buildTicketTypeCard(
-            type: TicketType.returnTrip,
-            title: 'Return Ticket',
-            description: 'Round trip with 10% discount',
-            price: (_selectedRoute?.fare ?? 0) * 1.8,
-            icon: Icons.repeat,
-          ),
-          
-          _buildTicketTypeCard(
-            type: TicketType.multiRide,
-            title: 'Multi-ride Ticket',
-            description: '5 journeys with 20% discount',
-            price: (_selectedRoute?.fare ?? 0) * 4,
-            icon: Icons.card_membership,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTicketTypeCard({
-    required TicketType type,
-    required String title,
-    required String description,
-    required double price,
-    required IconData icon,
-  }) {
-    final isSelected = _selectedTicketType == type;
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isSelected ? OrbitLiveColors.primaryTeal : Colors.transparent,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _selectedTicketType = type;
-          });
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: OrbitLiveColors.primaryTeal.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: OrbitLiveColors.primaryTeal,
-                  size: 24,
-                ),
+    return SlideTransition(
+      position: _slideAnimation,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select Ticket Type',
+              style: OrbitLiveTextStyles.displaySmall.copyWith(
+                color: OrbitLiveColors.black,
               ),
-              const SizedBox(width: 16),
-              Expanded(
+            ),
+            const SizedBox(height: 24),
+            
+            // Ticket type cards
+            _buildTicketTypeCards(),
+            
+            const SizedBox(height: 30),
+            
+            // Selected route info
+            if (_selectedRoute != null) ...[
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.white, Colors.grey.shade50],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      'Selected Route',
                       style: OrbitLiveTextStyles.bodyLarge.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: OrbitLiveColors.black,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Icon(Icons.route, color: OrbitLiveColors.primaryTeal),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${_selectedRoute!.source} → ${_selectedRoute!.destination}',
+                          style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                            color: OrbitLiveColors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
                     Text(
-                      description,
-                      style: OrbitLiveTextStyles.bodyMedium.copyWith(
-                        color: OrbitLiveColors.mediumGray,
+                      'Duration: ${_selectedRoute!.estimatedDuration.inMinutes} mins',
+                      style: OrbitLiveTextStyles.bodySmall.copyWith(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Fare: ₹${_selectedRoute!.fare.toStringAsFixed(2)}',
+                      style: OrbitLiveTextStyles.bodySmall.copyWith(
+                        color: Colors.grey,
                       ),
                     ),
                   ],
                 ),
               ),
-              Text(
-                '₹${price.toStringAsFixed(0)}',
-                style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                  color: OrbitLiveColors.primaryTeal,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 20),
+            ],
+            
+            // Continue button
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: _selectedTicketType != null ? () => _nextStep() : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: OrbitLiveColors.primaryTeal,
+                  foregroundColor: Colors.white,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  disabledBackgroundColor: Colors.grey.shade300,
+                  disabledForegroundColor: Colors.grey.shade500,
+                ),
+                child: Text(
+                  'Continue',
+                  style: OrbitLiveTextStyles.buttonPrimary,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTicketTypeCards() {
+    final ticketTypes = [
+      {
+        'type': TicketType.oneTime,
+        'title': 'One-time Ticket',
+        'description': 'Valid for a single journey',
+        'icon': Icons.confirmation_number,
+      },
+      {
+        'type': TicketType.returnTrip,
+        'title': 'Return Ticket',
+        'description': 'Valid for onward and return journey',
+        'icon': Icons.swap_horiz,
+      },
+      {
+        'type': TicketType.multiRide,
+        'title': 'Multi-ride Pass',
+        'description': 'Valid for 10 journeys',
+        'icon': Icons.repeat,
+      },
+    ];
+    
+    return Column(
+      children: ticketTypes.map((ticketType) {
+        final isSelected = _selectedTicketType == ticketType['type'];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 15),
+          decoration: BoxDecoration(
+            gradient: isSelected
+                ? LinearGradient(
+                    colors: OrbitLiveColors.tealGradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : LinearGradient(
+                    colors: [Colors.white, Colors.grey.shade50],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            border: isSelected
+                ? Border.all(color: OrbitLiveColors.primaryTeal, width: 2)
+                : null,
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(15),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white.withValues(alpha: 0.2) : OrbitLiveColors.primaryTeal.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                ticketType['icon'] as IconData,
+                color: isSelected ? Colors.white : OrbitLiveColors.primaryTeal,
+              ),
+            ),
+            title: Text(
+              ticketType['title'] as String,
+              style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : OrbitLiveColors.black,
+              ),
+            ),
+            subtitle: Text(
+              ticketType['description'] as String,
+              style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                color: isSelected ? Colors.white70 : OrbitLiveColors.darkGray,
+              ),
+            ),
+            trailing: isSelected
+                ? const Icon(Icons.check_circle, color: Colors.white)
+                : null,
+            onTap: () {
+              setState(() {
+                _selectedTicketType = ticketType['type'] as TicketType;
+              });
+              
+              // Update payment amount when ticket type changes
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                setState(() {});
+              });
+            },
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -592,7 +715,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
               gradient: LinearGradient(
                 colors: [
                   OrbitLiveColors.primaryTeal,
-                  OrbitLiveColors.primaryTeal.withOpacity(0.7),
+                  OrbitLiveColors.primaryTeal.withValues(alpha: 0.7),
                 ],
               ),
             ),
@@ -639,7 +762,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
               color: Colors.green,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
+                  color: Colors.green.withValues(alpha: 0.3),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -739,7 +862,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -826,6 +949,26 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
     );
   }
 
+  void _nextStep() {
+    setState(() {
+      _currentStep++;
+    });
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _previousStep() {
+    setState(() {
+      _currentStep--;
+    });
+    _pageController.previousPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _swapLocations() {
     final temp = _sourceController.text;
     _sourceController.text = _destinationController.text;
@@ -891,9 +1034,9 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
       case TicketType.oneTime:
         return basePrice;
       case TicketType.returnTrip:
-        return basePrice * 1.8; // 10% discount
+        return basePrice * 2 * 0.9; // 10% discount on return trip (2 tickets)
       case TicketType.multiRide:
-        return basePrice * 4; // 20% discount for 5 rides
+        return basePrice * 5 * 0.8; // 20% discount for 5 rides
     }
   }
 

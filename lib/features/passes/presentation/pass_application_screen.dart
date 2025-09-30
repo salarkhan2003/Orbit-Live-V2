@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../shared/orbit_live_colors.dart';
 import '../../../shared/orbit_live_text_styles.dart';
 import '../../../shared/components/app_header.dart';
-import '../../../shared/utils/responsive_helper.dart';
 import '../domain/pass_models.dart';
 import 'widgets/animated_pass_card.dart';
 import 'providers/pass_provider.dart';
@@ -198,365 +197,263 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
             ),
             const SizedBox(height: 24),
             
-            _buildPassTypeCard(
-              type: PassType.monthly,
-              title: 'Monthly Pass',
-              description: '30 days unlimited travel',
-              price: 500.0,
-              icon: Icons.calendar_view_month,
-              color: Colors.blue,
-            ),
+            // Pass type cards with enhanced styling
+            _buildPassTypeCards(),
             
-            _buildPassTypeCard(
-              type: PassType.quarterly,
-              title: 'Quarterly Pass',
-              description: '90 days with 15% discount',
-              price: 1275.0,
-              originalPrice: 1500.0,
-              icon: Icons.calendar_view_week,
-              color: Colors.orange,
-            ),
+            const SizedBox(height: 30),
             
-            _buildPassTypeCard(
-              type: PassType.annual,
-              title: 'Annual Pass',
-              description: '365 days with 25% discount',
-              price: 4500.0,
-              originalPrice: 6000.0,
-              icon: Icons.calendar_today,
-              color: Colors.green,
-            ),
-            
-            const SizedBox(height: 24),
-            
-            if (_selectedPassType != null) ...[
-              Text(
-                'Select Category',
-                style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: OrbitLiveColors.black,
+            // Continue button
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: _selectedPassType != null ? () => _nextStep() : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: OrbitLiveColors.primaryTeal,
+                  foregroundColor: Colors.white,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  disabledBackgroundColor: Colors.grey.shade300,
+                  disabledForegroundColor: Colors.grey.shade500,
+                ),
+                child: Text(
+                  'Continue',
+                  style: OrbitLiveTextStyles.buttonPrimary,
                 ),
               ),
-              const SizedBox(height: 16),
-              
-              _buildCategoryCard(
-                category: PassCategory.general,
-                title: 'General',
-                description: 'Standard pricing',
-                discount: 0,
-              ),
-              
-              _buildCategoryCard(
-                category: PassCategory.student,
-                title: 'Student',
-                description: 'Valid student ID required',
-                discount: 50,
-              ),
-              
-              _buildCategoryCard(
-                category: PassCategory.senior,
-                title: 'Senior Citizen',
-                description: 'Age 60+ with valid ID',
-                discount: 30,
-              ),
-              
-              _buildCategoryCard(
-                category: PassCategory.employee,
-                title: 'Employee',
-                description: 'Company employee ID required',
-                discount: 20,
-              ),
-            ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPassTypeCard({
-    required PassType type,
-    required String title,
-    required String description,
-    required double price,
-    double? originalPrice,
-    required IconData icon,
-    required Color color,
-  }) {
-    final isSelected = _selectedPassType == type;
+  Widget _buildPassTypeCards() {
+    final passTypes = [
+      {
+        'type': PassType.monthly,
+        'title': 'Monthly Pass',
+        'description': 'Valid for 30 days',
+        'price': '₹300',
+        'icon': Icons.calendar_today,
+        'color': Colors.blue,
+      },
+      {
+        'type': PassType.quarterly,
+        'title': 'Quarterly Pass',
+        'description': 'Valid for 3 months',
+        'price': '₹800',
+        'icon': Icons.calendar_view_month,
+        'color': Colors.green,
+      },
+      {
+        'type': PassType.annual,
+        'title': 'Annual Pass',
+        'description': 'Valid for 12 months',
+        'price': '₹3000',
+        'icon': Icons.calendar_month,
+        'color': Colors.purple,
+      },
+    ];
     
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isSelected ? OrbitLiveColors.primaryTeal : Colors.transparent,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _selectedPassType = type;
-            _selectedCategory = null; // Reset category when pass type changes
-          });
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: OrbitLiveTextStyles.bodyMedium.copyWith(
-                        color: OrbitLiveColors.mediumGray,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (originalPrice != null) ...[
-                    Text(
-                      '₹${originalPrice.toStringAsFixed(0)}',
-                      style: OrbitLiveTextStyles.bodyMedium.copyWith(
-                        color: OrbitLiveColors.mediumGray,
-                        decoration: TextDecoration.lineThrough,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                  ],
-                  Text(
-                    '₹${price.toStringAsFixed(0)}',
-                    style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                      color: OrbitLiveColors.primaryTeal,
-                      fontWeight: FontWeight.bold,
-                    ),
+    return Column(
+      children: passTypes.map((passType) {
+        final isSelected = _selectedPassType == passType['type'];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 15),
+          decoration: BoxDecoration(
+            gradient: isSelected
+                ? LinearGradient(
+                    colors: [
+                      passType['color'] as Color,
+                      (passType['color'] as Color).withValues(alpha: 0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : LinearGradient(
+                    colors: [Colors.white, Colors.grey.shade50],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
+            border: isSelected
+                ? Border.all(color: passType['color'] as Color, width: 2)
+                : null,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryCard({
-    required PassCategory category,
-    required String title,
-    required String description,
-    required int discount,
-  }) {
-    final isSelected = _selectedCategory == category;
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isSelected ? OrbitLiveColors.primaryTeal : Colors.grey.shade300,
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _selectedCategory = category;
-          });
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          title,
-                          style: OrbitLiveTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (discount > 0) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              '${discount}% OFF',
-                              style: OrbitLiveTextStyles.bodySmall.copyWith(
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: OrbitLiveTextStyles.bodySmall.copyWith(
-                        color: OrbitLiveColors.mediumGray,
-                      ),
-                    ),
-                  ],
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(15),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? Colors.white.withValues(alpha: 0.2) 
+                    : (passType['color'] as Color).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                passType['icon'] as IconData,
+                color: isSelected ? Colors.white : passType['color'] as Color,
+              ),
+            ),
+            title: Text(
+              passType['title'] as String,
+              style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : OrbitLiveColors.black,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  passType['description'] as String,
+                  style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                    color: isSelected ? Colors.white70 : OrbitLiveColors.darkGray,
+                  ),
                 ),
-              ),
-              Radio<PassCategory>(
-                value: category,
-                groupValue: _selectedCategory,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                },
-                activeColor: OrbitLiveColors.primaryTeal,
-              ),
-            ],
+                const SizedBox(height: 5),
+                Text(
+                  passType['price'] as String,
+                  style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : passType['color'] as Color,
+                  ),
+                ),
+              ],
+            ),
+            trailing: isSelected
+                ? const Icon(Icons.check_circle, color: Colors.white)
+                : null,
+            onTap: () {
+              setState(() {
+                _selectedPassType = passType['type'] as PassType;
+              });
+            },
           ),
-        ),
-      ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildUserDetailsStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Personal Details',
-            style: OrbitLiveTextStyles.cardTitle.copyWith(
-              fontSize: 24,
-              color: OrbitLiveColors.black,
+    return SlideTransition(
+      position: _slideAnimation,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'User Details',
+              style: OrbitLiveTextStyles.cardTitle.copyWith(
+                fontSize: 24,
+                color: OrbitLiveColors.black,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+            const SizedBox(height: 24),
+            
+            // Name field
+            _buildEnhancedTextField(
+              controller: _nameController,
+              label: 'Full Name',
+              hint: 'Enter your full name',
+              icon: Icons.person,
             ),
-            child: Column(
-              children: [
-                _buildTextField(
-                  controller: _nameController,
-                  label: 'Full Name',
-                  hint: 'Enter your full name',
-                  icon: Icons.person,
-                ),
-                
-                const SizedBox(height: 16),
-                
-                _buildTextField(
-                  controller: _emailController,
-                  label: 'Email Address',
-                  hint: 'Enter your email',
-                  icon: Icons.email,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                
-                const SizedBox(height: 16),
-                
-                _buildTextField(
-                  controller: _phoneController,
-                  label: 'Phone Number',
-                  hint: 'Enter your phone number',
-                  icon: Icons.phone,
-                  keyboardType: TextInputType.phone,
-                ),
-                
-                const SizedBox(height: 16),
-                
-                _buildTextField(
-                  controller: _addressController,
-                  label: 'Address',
-                  hint: 'Enter your complete address',
-                  icon: Icons.location_on,
-                  maxLines: 3,
-                ),
-                
-                if (_selectedCategory == PassCategory.student) ...[
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _studentIdController,
-                    label: 'Student ID',
-                    hint: 'Enter your student ID',
-                    icon: Icons.school,
+            
+            const SizedBox(height: 20),
+            
+            // Email field
+            _buildEnhancedTextField(
+              controller: _emailController,
+              label: 'Email Address',
+              hint: 'Enter your email address',
+              icon: Icons.email,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Phone field
+            _buildEnhancedTextField(
+              controller: _phoneController,
+              label: 'Phone Number',
+              hint: 'Enter your phone number',
+              icon: Icons.phone,
+              keyboardType: TextInputType.phone,
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Address field
+            _buildEnhancedTextField(
+              controller: _addressController,
+              label: 'Address',
+              hint: 'Enter your address',
+              icon: Icons.home,
+              maxLines: 3,
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Category selection
+            Text(
+              'Select Category',
+              style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: OrbitLiveColors.black,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            _buildCategoryCards(),
+            
+            const SizedBox(height: 30),
+            
+            // Continue button
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: _nameController.text.isNotEmpty &&
+                         _emailController.text.isNotEmpty &&
+                         _phoneController.text.isNotEmpty &&
+                         _addressController.text.isNotEmpty &&
+                         _selectedCategory != null
+                    ? () => _nextStep()
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: OrbitLiveColors.primaryTeal,
+                  foregroundColor: Colors.white,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                ],
-                
-                if (_selectedCategory == PassCategory.employee) ...[
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _employeeIdController,
-                    label: 'Employee ID',
-                    hint: 'Enter your employee ID',
-                    icon: Icons.badge,
-                  ),
-                ],
-              ],
+                  disabledBackgroundColor: Colors.grey.shade300,
+                  disabledForegroundColor: Colors.grey.shade500,
+                ),
+                child: Text(
+                  'Continue',
+                  style: OrbitLiveTextStyles.buttonPrimary,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildEnhancedTextField({
     required TextEditingController controller,
     required String label,
     required String hint,
@@ -564,18 +461,158 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
     TextInputType? keyboardType,
     int maxLines = 1,
   }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.white, Colors.grey.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        onChanged: (_) {
+          // Trigger state update to enable/disable continue button
+          setState(() {});
+        },
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          prefixIcon: Icon(icon, color: OrbitLiveColors.primaryTeal),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 15,
+          ),
+          labelStyle: TextStyle(
+            color: OrbitLiveColors.black,
+            fontWeight: FontWeight.w500,
+          ),
+          hintStyle: TextStyle(
+            color: Colors.grey,
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCategoryCards() {
+    final categories = [
+      {
+        'category': PassCategory.general,
+        'title': 'General',
+        'description': 'For all general passengers',
+        'icon': Icons.person,
+        'color': Colors.blue,
+      },
+      {
+        'category': PassCategory.student,
+        'title': 'Student',
+        'description': 'For students with valid ID',
+        'icon': Icons.school,
+        'color': Colors.green,
+      },
+      {
+        'category': PassCategory.senior,
+        'title': 'Senior Citizen',
+        'description': 'For passengers above 60 years',
+        'icon': Icons.accessible,
+        'color': Colors.purple,
+      },
+      {
+        'category': PassCategory.employee,
+        'title': 'Employee',
+        'description': 'For government/private employees',
+        'icon': Icons.work,
+        'color': Colors.orange,
+      },
+    ];
+    
+    return Column(
+      children: categories.map((category) {
+        final isSelected = _selectedCategory == category['category'];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 15),
+          decoration: BoxDecoration(
+            gradient: isSelected
+                ? LinearGradient(
+                    colors: [
+                      category['color'] as Color,
+                      (category['color'] as Color).withValues(alpha: 0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : LinearGradient(
+                    colors: [Colors.white, Colors.grey.shade50],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            border: isSelected
+                ? Border.all(color: category['color'] as Color, width: 2)
+                : null,
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(15),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? Colors.white.withValues(alpha: 0.2) 
+                    : (category['color'] as Color).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                category['icon'] as IconData,
+                color: isSelected ? Colors.white : category['color'] as Color,
+              ),
+            ),
+            title: Text(
+              category['title'] as String,
+              style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : OrbitLiveColors.black,
+              ),
+            ),
+            subtitle: Text(
+              category['description'] as String,
+              style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                color: isSelected ? Colors.white70 : OrbitLiveColors.darkGray,
+              ),
+            ),
+            trailing: isSelected
+                ? const Icon(Icons.check_circle, color: Colors.white)
+                : null,
+            onTap: () {
+              setState(() {
+                _selectedCategory = category['category'] as PassCategory;
+                
+                // Clear category-specific fields when changing category
+                _studentIdController.clear();
+                _employeeIdController.clear();
+              });
+            },
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -601,7 +638,7 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -696,7 +733,7 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -789,7 +826,7 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
               color: Colors.green,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
+                  color: Colors.green.withValues(alpha: 0.3),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -889,7 +926,7 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -1031,6 +1068,26 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
         curve: Curves.easeInOut,
       );
     }
+  }
+
+  void _nextStep() {
+    setState(() {
+      _currentStep++;
+    });
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _previousStep() {
+    setState(() {
+      _currentStep--;
+    });
+    _pageController.previousPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   void _uploadDocuments() {

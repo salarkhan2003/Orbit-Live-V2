@@ -7,7 +7,7 @@ class OrbitLiveTextStyles {
   static const TextStyle headerTitle = TextStyle(
     fontSize: 32,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: OrbitLiveColors.black,
     letterSpacing: -0.5,
     height: 1.2,
   );
@@ -15,16 +15,41 @@ class OrbitLiveTextStyles {
   static const TextStyle headerSubtitle = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w400,
-    color: Colors.white70,
+    color: OrbitLiveColors.darkGray,
     letterSpacing: 0.15,
     height: 1.4,
+  );
+  
+  // Enhanced header styles for better visual hierarchy
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 40,
+    fontWeight: FontWeight.bold,
+    color: OrbitLiveColors.black,
+    letterSpacing: -0.8,
+    height: 1.1,
+  );
+  
+  static const TextStyle displayMedium = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    color: OrbitLiveColors.black,
+    letterSpacing: -0.5,
+    height: 1.2,
+  );
+  
+  static const TextStyle displaySmall = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    color: OrbitLiveColors.black,
+    letterSpacing: -0.3,
+    height: 1.2,
   );
   
   // Card styles
   static const TextStyle cardTitle = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.w600,
-    color: Colors.white,
+    color: OrbitLiveColors.black,
     letterSpacing: -0.25,
     height: 1.3,
   );
@@ -32,7 +57,7 @@ class OrbitLiveTextStyles {
   static const TextStyle cardSubtitle = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w400,
-    color: Colors.white70,
+    color: OrbitLiveColors.darkGray,
     letterSpacing: 0.1,
     height: 1.4,
   );
@@ -40,7 +65,7 @@ class OrbitLiveTextStyles {
   static const TextStyle cardDescription = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: Colors.white60,
+    color: OrbitLiveColors.darkGray,
     letterSpacing: 0.25,
     height: 1.5,
   );
@@ -61,6 +86,28 @@ class OrbitLiveTextStyles {
   );
   
   static const TextStyle buttonSmall = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.25,
+    height: 1.2,
+  );
+  
+  // Enhanced button styles with better visual feedback
+  static const TextStyle buttonPrimary = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.5,
+    height: 1.2,
+  );
+  
+  static const TextStyle buttonSecondary = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.25,
+    height: 1.2,
+  );
+  
+  static const TextStyle buttonTertiary = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.25,
@@ -120,6 +167,31 @@ class OrbitLiveTextStyles {
   static const TextStyle bodySmall = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
+    color: OrbitLiveColors.darkGray,
+    letterSpacing: 0.25,
+    height: 1.5,
+  );
+  
+  // Enhanced body text styles for better readability
+  static const TextStyle bodyLargeBold = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: OrbitLiveColors.black,
+    letterSpacing: 0.15,
+    height: 1.5,
+  );
+  
+  static const TextStyle bodyMediumBold = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: OrbitLiveColors.black,
+    letterSpacing: 0.15,
+    height: 1.5,
+  );
+  
+  static const TextStyle bodySmallBold = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
     color: OrbitLiveColors.darkGray,
     letterSpacing: 0.25,
     height: 1.5,

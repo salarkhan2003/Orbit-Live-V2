@@ -162,11 +162,11 @@ class _SplashScreenState extends State<SplashScreen>
                                     child: Container(
                                       padding: EdgeInsets.all(24),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
+                                        color: Colors.white.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(30),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.white.withOpacity(0.2),
+                                            color: Colors.white.withValues(alpha: 0.2),
                                             blurRadius: 20,
                                             spreadRadius: 5,
                                           ),
@@ -293,9 +293,9 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 60 + (index * 10),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.03),
+                  color: Colors.white.withValues(alpha: 0.03),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),

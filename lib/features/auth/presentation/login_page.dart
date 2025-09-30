@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../main.dart';
-import '../../../core/localization_service.dart';
 import '../../../shared/orbit_live_colors.dart';
 import '../../../shared/orbit_live_text_styles.dart';
 import '../../../shared/components/app_header.dart';
 import '../../../shared/utils/responsive_helper.dart';
-import '../domain/user_role.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -72,16 +70,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
-      // Create authenticated user (mock login for demo)
-      authProvider.setAuthenticatedUser(
-        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-        email: _emailController.text,
-        firstName: 'User',
-        lastName: 'Account',
-        phoneNumber: '',
-        role: UserRole.passenger, // Default to passenger, can be changed in role selection
-      );
-
+      // Perform actual login
+      await authProvider.login(_emailController.text, _passwordController.text);
+      
+      // After successful login, navigate to role selection
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/role-selection');
       }
@@ -182,7 +174,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

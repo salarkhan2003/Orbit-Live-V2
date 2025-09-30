@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/driver_navigation_drawer.dart';
 import '../../../core/localization_service.dart';
 import '../../../core/connectivity_service.dart';
-import '../../map/openstreet_map_screen.dart';
+import '../../map/enhanced_map_screen.dart';
 
 class DriverDashboard extends StatefulWidget {
   const DriverDashboard({super.key});
@@ -78,7 +78,7 @@ class _DriverDashboardState extends State<DriverDashboard>
           ),
         ],
         elevation: 5,
-        shadowColor: Colors.green.withOpacity(0.3),
+        shadowColor: Colors.green.withValues(alpha: 0.3)
       ),
       drawer: DriverNavigationDrawer(),
       body: SingleChildScrollView(
@@ -140,8 +140,8 @@ class _DriverDashboardState extends State<DriverDashboard>
             boxShadow: [
               BoxShadow(
                 color: _isTripActive
-                    ? Colors.green.withOpacity(0.3)
-                    : Colors.grey.withOpacity(0.3),
+                    ? Colors.green.withValues(alpha: 0.3)
+                    : Colors.grey.withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: Offset(0, 5),
               ),
@@ -154,7 +154,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(15),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -206,7 +206,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -222,7 +222,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.control_camera, color: Colors.blue, size: 25),
@@ -334,7 +334,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: Offset(0, 5),
           ),
@@ -430,7 +430,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: Offset(0, 5),
           ),
@@ -546,7 +546,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -562,7 +562,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.route, color: Colors.blue, size: 25),
@@ -711,7 +711,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -727,7 +727,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.1),
+                    color: Colors.purple.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.group, color: Colors.purple, size: 25),
@@ -818,7 +818,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
+            color: Colors.purple.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: Offset(0, 5),
           ),
@@ -915,7 +915,7 @@ class _DriverDashboardState extends State<DriverDashboard>
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: Offset(0, 5),
             ),
@@ -929,7 +929,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 padding: EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
+                    colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.2)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -964,7 +964,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -980,7 +980,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.analytics, color: Colors.blue, size: 25),
@@ -1038,7 +1038,7 @@ class _DriverDashboardState extends State<DriverDashboard>
           padding: EdgeInsets.all(15),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
+              colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.2)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -1277,7 +1277,7 @@ class _DriverDashboardState extends State<DriverDashboard>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OpenStreetMapScreen(userRole: 'driver'),
+        builder: (context) => EnhancedMapScreen(userRole: 'driver'),
       ),
     );
   }

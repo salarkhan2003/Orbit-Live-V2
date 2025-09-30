@@ -71,6 +71,320 @@ class TravelBuddyService {
           lastSeen: DateTime.now().subtract(Duration(minutes: 5)),
           bio: 'Professional commuter, prefer quiet conversations',
         ),
+        // Add more mock profiles for Guntur area
+        TravelBuddyProfile(
+          id: '4',
+          name: 'Raj Kumar',
+          profileImageUrl: null,
+          route: 'Guntur Central to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 5)),
+          genderPreference: GenderPreference.any,
+          languages: ['Telugu', 'English'],
+          rating: 4.7,
+          completedTrips: 18,
+          isOnline: true,
+          bio: 'Daily commuter from Guntur to Tenali',
+        ),
+        TravelBuddyProfile(
+          id: '5',
+          name: 'Priya Reddy',
+          profileImageUrl: null,
+          route: 'Guntur to Mangalagiri',
+          travelTime: DateTime.now().add(Duration(minutes: 12)),
+          genderPreference: GenderPreference.female,
+          languages: ['Telugu', 'English'],
+          rating: 4.5,
+          completedTrips: 25,
+          isOnline: true,
+          bio: 'Software engineer traveling to Mangalagiri tech park',
+        ),
+        TravelBuddyProfile(
+          id: '6',
+          name: 'Arun Patel',
+          profileImageUrl: null,
+          route: 'RTC Bus Stand to Namburu',
+          travelTime: DateTime.now().add(Duration(minutes: 8)),
+          genderPreference: GenderPreference.any,
+          languages: ['Hindi', 'English'],
+          rating: 4.3,
+          completedTrips: 12,
+          isOnline: true,
+          bio: 'College student looking for travel buddies',
+        ),
+        TravelBuddyProfile(
+          id: '7',
+          name: 'Lakshmi Devi',
+          profileImageUrl: null,
+          route: 'Guntur Central to Amaravati Road',
+          travelTime: DateTime.now().add(Duration(minutes: 18)),
+          genderPreference: GenderPreference.female,
+          languages: ['Telugu'],
+          rating: 4.9,
+          completedTrips: 35,
+          isOnline: false,
+          lastSeen: DateTime.now().subtract(Duration(minutes: 2)),
+          bio: 'Retired teacher, enjoy peaceful commutes',
+        ),
+        TravelBuddyProfile(
+          id: '8',
+          name: 'Kiran Babu',
+          profileImageUrl: null,
+          route: 'Lakshmipuram to Pedakakani',
+          travelTime: DateTime.now().add(Duration(minutes: 25)),
+          genderPreference: GenderPreference.any,
+          languages: ['Telugu', 'English'],
+          rating: 4.2,
+          completedTrips: 9,
+          isOnline: true,
+          bio: 'New to the city, looking to make friends during commute',
+        ),
+        // Additional mock profiles for better matching
+        TravelBuddyProfile(
+          id: '9',
+          name: 'Suresh Babu',
+          profileImageUrl: null,
+          route: 'Guntur to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 7)),
+          genderPreference: GenderPreference.any,
+          languages: ['Telugu', 'English'],
+          rating: 4.6,
+          completedTrips: 22,
+          isOnline: true,
+          bio: 'Regular traveler between Guntur and Tenali',
+        ),
+        TravelBuddyProfile(
+          id: '10',
+          name: 'Anitha Rao',
+          profileImageUrl: null,
+          route: 'RTC Bus Stand to Mangalagiri',
+          travelTime: DateTime.now().add(Duration(minutes: 15)),
+          genderPreference: GenderPreference.female,
+          languages: ['Telugu', 'English'],
+          rating: 4.8,
+          completedTrips: 28,
+          isOnline: true,
+          bio: 'Works in Mangalagiri tech park, enjoy chatting during commute',
+        ),
+        // Additional mock profiles for better matching
+        TravelBuddyProfile(
+          id: '11',
+          name: 'Venkat Reddy',
+          profileImageUrl: null,
+          route: 'Guntur Central to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 6)),
+          genderPreference: GenderPreference.any,
+          languages: ['Telugu', 'English'],
+          rating: 4.4,
+          completedTrips: 15,
+          isOnline: true,
+          bio: 'Daily traveler to Tenali market',
+        ),
+        TravelBuddyProfile(
+          id: '12',
+          name: 'Saritha Naidu',
+          profileImageUrl: null,
+          route: 'RTC Bus Stand to Mangalagiri',
+          travelTime: DateTime.now().add(Duration(minutes: 14)),
+          genderPreference: GenderPreference.female,
+          languages: ['Telugu', 'English'],
+          rating: 4.7,
+          completedTrips: 22,
+          isOnline: true,
+          bio: 'Works in Mangalagiri hospital',
+        ),
+        TravelBuddyProfile(
+          id: '13',
+          name: 'Ramesh Babu',
+          profileImageUrl: null,
+          route: 'Lakshmipuram to Namburu',
+          travelTime: DateTime.now().add(Duration(minutes: 9)),
+          genderPreference: GenderPreference.any,
+          languages: ['Telugu', 'Hindi'],
+          rating: 4.2,
+          completedTrips: 18,
+          isOnline: true,
+          bio: 'College professor',
+        ),
+        TravelBuddyProfile(
+          id: '14',
+          name: 'Deepika Rao',
+          profileImageUrl: null,
+          route: 'Gurazala to Pedakakani',
+          travelTime: DateTime.now().add(Duration(minutes: 18)),
+          genderPreference: GenderPreference.female,
+          languages: ['Telugu', 'English'],
+          rating: 4.9,
+          completedTrips: 31,
+          isOnline: true,
+          bio: 'Software engineer',
+        ),
+        TravelBuddyProfile(
+          id: '15',
+          name: 'Srinivas Kumar',
+          profileImageUrl: null,
+          route: 'Guntur to Amaravati Road',
+          travelTime: DateTime.now().add(Duration(minutes: 20)),
+          genderPreference: GenderPreference.any,
+          languages: ['Telugu', 'English'],
+          rating: 4.3,
+          completedTrips: 12,
+          isOnline: true,
+          bio: 'Business owner',
+        ),
+      ]);
+    }
+    
+    // Add mock requests if none exist
+    if (_mockRequests.isEmpty) {
+      _mockRequests.addAll([
+        BuddyRequest(
+          id: 'req_1',
+          senderId: '4', // Raj Kumar
+          receiverId: 'test_user_123', // Current user
+          route: 'Guntur Central to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 5)),
+          status: BuddyRequestStatus.pending,
+          createdAt: DateTime.now().subtract(Duration(minutes: 10)),
+        ),
+        BuddyRequest(
+          id: 'req_2',
+          senderId: '5', // Priya Reddy
+          receiverId: 'test_user_123', // Current user
+          route: 'Guntur to Mangalagiri',
+          travelTime: DateTime.now().add(Duration(minutes: 12)),
+          status: BuddyRequestStatus.pending,
+          createdAt: DateTime.now().subtract(Duration(minutes: 15)),
+        ),
+        // Additional mock requests
+        BuddyRequest(
+          id: 'req_3',
+          senderId: '9', // Suresh Babu
+          receiverId: 'test_user_123', // Current user
+          route: 'Guntur to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 7)),
+          status: BuddyRequestStatus.pending,
+          createdAt: DateTime.now().subtract(Duration(minutes: 5)),
+        ),
+        BuddyRequest(
+          id: 'req_4',
+          senderId: '10', // Anitha Rao
+          receiverId: 'test_user_123', // Current user
+          route: 'RTC Bus Stand to Mangalagiri',
+          travelTime: DateTime.now().add(Duration(minutes: 15)),
+          status: BuddyRequestStatus.pending,
+          createdAt: DateTime.now().subtract(Duration(minutes: 8)),
+        ),
+        // Additional mock requests
+        BuddyRequest(
+          id: 'req_5',
+          senderId: '11', // Venkat Reddy
+          receiverId: 'test_user_123', // Current user
+          route: 'Guntur Central to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 6)),
+          status: BuddyRequestStatus.pending,
+          createdAt: DateTime.now().subtract(Duration(minutes: 12)),
+        ),
+        BuddyRequest(
+          id: 'req_6',
+          senderId: '12', // Saritha Naidu
+          receiverId: 'test_user_123', // Current user
+          route: 'RTC Bus Stand to Mangalagiri',
+          travelTime: DateTime.now().add(Duration(minutes: 14)),
+          status: BuddyRequestStatus.pending,
+          createdAt: DateTime.now().subtract(Duration(minutes: 20)),
+        ),
+        BuddyRequest(
+          id: 'req_7',
+          senderId: '14', // Deepika Rao
+          receiverId: 'test_user_123', // Current user
+          route: 'Gurazala to Pedakakani',
+          travelTime: DateTime.now().add(Duration(minutes: 18)),
+          status: BuddyRequestStatus.pending,
+          createdAt: DateTime.now().subtract(Duration(minutes: 25)),
+        ),
+      ]);
+    }
+    
+    // Add mock connections if none exist
+    if (_mockConnections.isEmpty) {
+      _mockConnections.addAll([
+        TravelBuddyConnection(
+          id: 'conn_1',
+          userId1: 'test_user_123', // Current user
+          userId2: '4', // Raj Kumar
+          route: 'Guntur Central to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 5)),
+          connectedAt: DateTime.now().subtract(Duration(minutes: 30)),
+          isActive: true,
+          user1Location: TravelBuddyLocation(
+            latitude: 16.3067,
+            longitude: 80.4365,
+            timestamp: DateTime.now(),
+          ),
+          user2Location: TravelBuddyLocation(
+            latitude: 16.2987,
+            longitude: 80.4425,
+            timestamp: DateTime.now(),
+          ),
+        ),
+        TravelBuddyConnection(
+          id: 'conn_2',
+          userId1: 'test_user_123', // Current user
+          userId2: '6', // Arun Patel
+          route: 'RTC Bus Stand to Namburu',
+          travelTime: DateTime.now().add(Duration(minutes: 8)),
+          connectedAt: DateTime.now().subtract(Duration(minutes: 45)),
+          isActive: true,
+          user1Location: TravelBuddyLocation(
+            latitude: 16.3067,
+            longitude: 80.4365,
+            timestamp: DateTime.now(),
+          ),
+          user2Location: TravelBuddyLocation(
+            latitude: 16.2927,
+            longitude: 80.4505,
+            timestamp: DateTime.now(),
+          ),
+        ),
+        // Additional mock connections
+        TravelBuddyConnection(
+          id: 'conn_3',
+          userId1: 'test_user_123', // Current user
+          userId2: '9', // Suresh Babu
+          route: 'Guntur to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 7)),
+          connectedAt: DateTime.now().subtract(Duration(minutes: 20)),
+          isActive: true,
+          user1Location: TravelBuddyLocation(
+            latitude: 16.3067,
+            longitude: 80.4365,
+            timestamp: DateTime.now(),
+          ),
+          user2Location: TravelBuddyLocation(
+            latitude: 16.3000,
+            longitude: 80.4400,
+            timestamp: DateTime.now(),
+          ),
+        ),
+        TravelBuddyConnection(
+          id: 'conn_4',
+          userId1: 'test_user_123', // Current user
+          userId2: '10', // Anitha Rao
+          route: 'RTC Bus Stand to Mangalagiri',
+          travelTime: DateTime.now().add(Duration(minutes: 15)),
+          connectedAt: DateTime.now().subtract(Duration(minutes: 60)),
+          isActive: true,
+          user1Location: TravelBuddyLocation(
+            latitude: 16.3067,
+            longitude: 80.4365,
+            timestamp: DateTime.now(),
+          ),
+          user2Location: TravelBuddyLocation(
+            latitude: 16.2800,
+            longitude: 80.4600,
+            timestamp: DateTime.now(),
+          ),
+        ),
       ]);
     }
   }
@@ -122,8 +436,11 @@ class TravelBuddyService {
       return b.rating.compareTo(a.rating);
     });
     
-    _matchesController.add(matches);
-    return matches;
+    // Limit to 10 matches for better performance
+    final limitedMatches = matches.length > 10 ? matches.sublist(0, 10) : matches;
+    
+    _matchesController.add(limitedMatches);
+    return limitedMatches;
   }
 
   /// Send a buddy request
@@ -275,12 +592,56 @@ class TravelBuddyService {
   bool _isRouteSimilar(String route1, String route2) {
     // In a real implementation, this would use GPS coordinates
     // and calculate actual route similarity
-    final words1 = route1.toLowerCase().split(' ');
-    final words2 = route2.toLowerCase().split(' ');
     
+    // Convert to lowercase for case-insensitive comparison
+    final normalizedRoute1 = route1.toLowerCase();
+    final normalizedRoute2 = route2.toLowerCase();
+    
+    // Check for exact match first
+    if (normalizedRoute1 == normalizedRoute2) return true;
+    
+    // Check for Guntur-specific route matching
+    final gunturLocations = [
+      'guntur', 'guntur central', 'rtc bus stand', 'lakshmipuram', 
+      'namburu', 'gurazala', 'kollipara', 'tenali', 'mangalagiri',
+      'amaravati road', 'pedakakani'
+    ];
+    
+    // Extract location keywords from both routes
+    final route1Words = normalizedRoute1.split(RegExp(r'[^\w]+'));
+    final route2Words = normalizedRoute2.split(RegExp(r'[^\w]+'));
+    
+    // Check if both routes contain the same Guntur locations
+    bool hasCommonGunturLocations = false;
+    for (String location in gunturLocations) {
+      bool inRoute1 = route1Words.any((word) => word.contains(location) || location.contains(word));
+      bool inRoute2 = route2Words.any((word) => word.contains(location) || location.contains(word));
+      
+      if (inRoute1 && inRoute2) {
+        hasCommonGunturLocations = true;
+        break;
+      }
+    }
+    
+    // Enhanced matching: check if routes have similar destinations
+    bool hasSimilarDestination = false;
+    final commonDestinations = ['tenali', 'mangalagiri', 'namburu', 'amaravati', 'pedakakani'];
+    for (String destination in commonDestinations) {
+      bool destInRoute1 = normalizedRoute1.contains(destination);
+      bool destInRoute2 = normalizedRoute2.contains(destination);
+      
+      if (destInRoute1 && destInRoute2) {
+        hasSimilarDestination = true;
+        break;
+      }
+    }
+    
+    if (hasCommonGunturLocations || hasSimilarDestination) return true;
+    
+    // Fallback to original word matching for non-Guntur routes
     int commonWords = 0;
-    for (String word in words1) {
-      if (words2.contains(word)) {
+    for (String word in route1Words) {
+      if (route2Words.contains(word)) {
         commonWords++;
       }
     }

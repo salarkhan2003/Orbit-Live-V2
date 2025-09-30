@@ -9,7 +9,9 @@ import 'widgets/travel_buddy_onboarding_popup.dart';
 
 /// Main TravelBuddy feature screen
 class TravelBuddyScreen extends StatefulWidget {
-  const TravelBuddyScreen({super.key});
+  final Map<String, String>? arguments;
+
+  const TravelBuddyScreen({super.key, this.arguments});
 
   @override
   State<TravelBuddyScreen> createState() => _TravelBuddyScreenState();
@@ -18,13 +20,23 @@ class TravelBuddyScreen extends StatefulWidget {
 class _TravelBuddyScreenState extends State<TravelBuddyScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  final _routeController = TextEditingController();
+  final _sourceController = TextEditingController();
+  final _destinationController = TextEditingController();
   DateTime? _selectedTravelTime;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Pre-fill with sample route for Guntur or use passed arguments
+    if (widget.arguments != null) {
+      _sourceController.text = widget.arguments!['source'] ?? 'Guntur Central';
+      _destinationController.text = widget.arguments!['destination'] ?? 'Tenali';
+    } else {
+      _sourceController.text = 'Guntur Central';
+      _destinationController.text = 'Tenali';
+    }
     
     // Show onboarding popup
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -35,13 +47,30 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
           FocusScope.of(context).requestFocus(FocusNode());
         },
       );
+      
+      // Initialize with mock data for testing
+      _initializeWithMockData();
     });
+  }
+
+  void _initializeWithMockData() {
+    final provider = Provider.of<TravelBuddyProvider>(context, listen: false);
+    
+    // If no search has been performed yet, do an initial search
+    if (provider.matches.isEmpty && provider.currentRoute == null) {
+      Future.delayed(Duration(milliseconds: 500), () {
+        if (mounted) {
+          _searchForBuddies(provider);
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _routeController.dispose();
+    _sourceController.dispose();
+    _destinationController.dispose();
     super.dispose();
   }
 
@@ -91,11 +120,15 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [Colors.white, Colors.grey.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -109,11 +142,12 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
             colors: OrbitLiveColors.tealGradient,
           ),
         ),
-        labelColor: Colors.white,
+        labelColor: Colors.white, // Keep white for contrast on teal gradient
         unselectedLabelColor: OrbitLiveColors.darkGray,
-        labelStyle: OrbitLiveTextStyles.bodyMedium.copyWith(
+        labelStyle: OrbitLiveTextStyles.buttonMedium.copyWith(
           fontWeight: FontWeight.w600,
         ),
+        unselectedLabelStyle: OrbitLiveTextStyles.buttonMedium,
         tabs: const [
           Tab(text: 'Find Buddies'),
           Tab(text: 'Requests'),
@@ -152,11 +186,15 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [Colors.white, Colors.grey.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -167,22 +205,54 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
         children: [
           Text(
             'Find Travel Buddies',
-            style: OrbitLiveTextStyles.cardTitle.copyWith(
+            style: OrbitLiveTextStyles.displaySmall.copyWith(
               color: OrbitLiveColors.black,
             ),
           ),
           const SizedBox(height: 16),
+          
+          // Source field
           TextField(
-            controller: _routeController,
+            controller: _sourceController,
             decoration: InputDecoration(
-              labelText: 'Route (e.g., Downtown to Airport)',
-              prefixIcon: const Icon(Icons.route),
+              labelText: 'Source',
+              hintText: 'Enter starting point',
+              prefixIcon: const Icon(Icons.location_on, color: OrbitLiveColors.primaryTeal),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: OrbitLiveColors.primaryTeal,
+                  width: 2,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 16),
+          
+          // Destination field
+          TextField(
+            controller: _destinationController,
+            decoration: InputDecoration(
+              labelText: 'Destination',
+              hintText: 'Enter destination',
+              prefixIcon: const Icon(Icons.location_on, color: OrbitLiveColors.primaryTeal),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: OrbitLiveColors.primaryTeal,
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
           InkWell(
             onTap: () => _selectTravelTime(),
             child: Container(
@@ -193,16 +263,18 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.access_time),
+                  const Icon(Icons.access_time, color: OrbitLiveColors.primaryTeal),
                   const SizedBox(width: 12),
                   Text(
                     _selectedTravelTime != null
                         ? 'Travel Time: ${_formatTime(_selectedTravelTime!)}'
                         : 'Select Travel Time',
-                    style: OrbitLiveTextStyles.bodyMedium,
+                    style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                      color: OrbitLiveColors.black, // Ensure visibility
+                    ),
                   ),
                   const Spacer(),
-                  const Icon(Icons.arrow_drop_down),
+                  const Icon(Icons.arrow_drop_down, color: OrbitLiveColors.primaryTeal),
                 ],
               ),
             ),
@@ -216,13 +288,16 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: OrbitLiveColors.primaryTeal,
                 foregroundColor: Colors.white,
+                elevation: 5,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                disabledBackgroundColor: Colors.grey.shade300,
+                disabledForegroundColor: Colors.grey.shade500,
               ),
               child: Text(
                 'Search for Buddies',
-                style: OrbitLiveTextStyles.buttonLarge,
+                style: OrbitLiveTextStyles.buttonPrimary,
               ),
             ),
           ),
@@ -265,7 +340,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -278,7 +353,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: OrbitLiveColors.primaryTeal.withOpacity(0.1),
+                backgroundColor: OrbitLiveColors.primaryTeal.withValues(alpha: 0.1),
                 child: Text(
                   buddy.name.substring(0, 1).toUpperCase(),
                   style: OrbitLiveTextStyles.bodyLarge.copyWith(
@@ -298,6 +373,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
                           buddy.name,
                           style: OrbitLiveTextStyles.bodyLarge.copyWith(
                             fontWeight: FontWeight.w600,
+                            color: OrbitLiveColors.black, // Ensure visibility
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -326,11 +402,15 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
           const SizedBox(height: 12),
           Text(
             'Route: ${buddy.route}',
-            style: OrbitLiveTextStyles.bodyMedium,
+            style: OrbitLiveTextStyles.bodyMedium.copyWith(
+              color: OrbitLiveColors.black, // Ensure visibility
+            ),
           ),
           Text(
             'Travel Time: ${_formatTime(buddy.travelTime)}',
-            style: OrbitLiveTextStyles.bodyMedium,
+            style: OrbitLiveTextStyles.bodyMedium.copyWith(
+              color: OrbitLiveColors.black, // Ensure visibility
+            ),
           ),
           if (buddy.bio != null) ...[
             const SizedBox(height: 8),
@@ -403,7 +483,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -508,7 +588,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -521,7 +601,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: Colors.green.withOpacity(0.1),
+                backgroundColor: Colors.green.withValues(alpha: 0.1),
                 child: Text(
                   buddy?.name.substring(0, 1).toUpperCase() ?? '?',
                   style: OrbitLiveTextStyles.bodyMedium.copyWith(
@@ -553,7 +633,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -676,7 +756,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
     return _buildEmptyState(
       icon: Icons.search,
       title: 'Find Your Travel Buddy',
-      subtitle: 'Enter your route and travel time to find companions',
+      subtitle: 'Enter your route (e.g., Guntur Central to Tenali) and travel time to find companions',
     );
   }
 
@@ -699,7 +779,9 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
 
   // Helper methods
   bool _canSearch() {
-    return _routeController.text.isNotEmpty && _selectedTravelTime != null;
+    return _sourceController.text.isNotEmpty && 
+           _destinationController.text.isNotEmpty && 
+           _selectedTravelTime != null;
   }
 
   String _formatTime(DateTime time) {
@@ -729,8 +811,11 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
   Future<void> _searchForBuddies(TravelBuddyProvider provider) async {
     if (!_canSearch()) return;
     
+    // Use separate source and destination fields instead of combining them
+    final route = '${_sourceController.text} to ${_destinationController.text}';
+    
     await provider.searchForBuddies(
-      route: _routeController.text,
+      route: route,
       travelTime: _selectedTravelTime!,
     );
   }

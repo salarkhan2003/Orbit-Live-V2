@@ -29,6 +29,26 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
   final _nameController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Add listeners to update payment details when amount changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updatePaymentDetails();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant PaymentMethodSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update payment details when amount changes
+    if (oldWidget.amount != widget.amount && widget.selectedMethod != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _updatePaymentDetails();
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _upiController.dispose();
     _cardNumberController.dispose();
@@ -110,7 +130,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -129,7 +149,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -197,7 +217,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -238,7 +258,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -257,9 +277,9 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
+              color: Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green.withOpacity(0.3)),
+              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -299,7 +319,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -397,13 +417,13 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            OrbitLiveColors.primaryTeal.withOpacity(0.1),
-            OrbitLiveColors.primaryBlue.withOpacity(0.1),
+            OrbitLiveColors.primaryTeal.withValues(alpha: 0.1),
+            OrbitLiveColors.primaryBlue.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: OrbitLiveColors.primaryTeal.withOpacity(0.3),
+          color: OrbitLiveColors.primaryTeal.withValues(alpha: 0.3),
         ),
       ),
       child: Row(

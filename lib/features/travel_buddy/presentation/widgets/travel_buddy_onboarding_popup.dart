@@ -15,22 +15,19 @@ class TravelBuddyOnboardingPopup extends StatefulWidget {
     this.onGetStarted,
   });
 
-  /// Show the onboarding popup if it hasn't been shown before
+  /// Show the onboarding popup every time the user visits the TravelBuddy screen
   static Future<void> showIfNeeded(
     BuildContext context, {
     VoidCallback? onGetStarted,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasShown = prefs.getBool('travel_buddy_onboarding_shown') ?? false;
-    
-    if (!hasShown && context.mounted) {
+    // Always show the popup when this method is called
+    if (context.mounted) {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => TravelBuddyOnboardingPopup(
           onClose: () {
             Navigator.of(context).pop();
-            _markAsShown();
           },
           onGetStarted: onGetStarted,
         ),
@@ -98,7 +95,13 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
   }
 
   void _handleClose() {
-    _scaleController.reverse().then((_) {
+    // Ensure the animation completes before closing
+    _scaleController.reverse().whenComplete(() {
+      if (mounted) {
+        widget.onClose();
+      }
+    }).catchError((_) {
+      // Fallback in case animation fails
       if (mounted) {
         widget.onClose();
       }
@@ -106,7 +109,14 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
   }
 
   void _handleGetStarted() {
-    _scaleController.reverse().then((_) {
+    // Ensure the animation completes before closing
+    _scaleController.reverse().whenComplete(() {
+      if (mounted) {
+        widget.onClose();
+        widget.onGetStarted?.call();
+      }
+    }).catchError((_) {
+      // Fallback in case animation fails
       if (mounted) {
         widget.onClose();
         widget.onGetStarted?.call();
@@ -116,6 +126,8 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Dialog(
@@ -123,16 +135,19 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
         child: ScaleTransition(
           scale: _scaleAnimation,
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            margin: const EdgeInsets.all(20),
+            constraints: BoxConstraints(
+              maxWidth: screenSize.width * 0.9,
+              maxHeight: screenSize.height * 0.7,
+            ),
+            margin: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
@@ -140,7 +155,11 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(),
-                _buildContent(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: _buildContent(),
+                  ),
+                ),
                 _buildActions(),
               ],
             ),
@@ -152,7 +171,7 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: OrbitLiveColors.tealGradient,
@@ -160,8 +179,8 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
         ),
       ),
       child: Column(
@@ -173,7 +192,7 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
               Text(
                 '🚌 TravelBuddy',
                 style: OrbitLiveTextStyles.headerTitle.copyWith(
-                  fontSize: 24,
+                  fontSize: 18,
                   color: Colors.white,
                 ),
               ),
@@ -182,18 +201,19 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
                 icon: const Icon(
                   Icons.close,
                   color: Colors.white,
-                  size: 24,
+                  size: 20,
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             'Find Your Perfect Travel Companion',
             style: OrbitLiveTextStyles.bodyLarge.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 14,
             ),
             textAlign: TextAlign.center,
           ),
@@ -204,7 +224,7 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
 
   Widget _buildContent() {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           _buildFeatureItem(
@@ -212,19 +232,19 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
             title: 'Connect with Fellow Travelers',
             description: 'Match with people traveling similar routes and times',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           _buildFeatureItem(
             icon: Icons.security,
             title: 'Safe & Secure',
             description: 'Mutual consent connections with privacy protection',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           _buildFeatureItem(
             icon: Icons.chat_bubble_outline,
             title: 'In-App Communication',
             description: 'Encrypted chat and voice calls with your travel buddy',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           _buildFeatureItem(
             icon: Icons.emergency,
             title: 'Emergency SOS',
@@ -234,7 +254,8 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
       ),
     );
   } 
- Widget _buildFeatureItem({
+  
+  Widget _buildFeatureItem({
     required IconData icon,
     required String title,
     required String description,
@@ -243,18 +264,18 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: OrbitLiveColors.primaryTeal.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            color: OrbitLiveColors.primaryTeal.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(
             icon,
             color: OrbitLiveColors.primaryTeal,
-            size: 20,
+            size: 16,
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,6 +285,7 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
                 style: OrbitLiveTextStyles.bodyLarge.copyWith(
                   fontWeight: FontWeight.w600,
                   color: OrbitLiveColors.black,
+                  fontSize: 15,
                 ),
               ),
               const SizedBox(height: 4),
@@ -271,6 +293,7 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
                 description,
                 style: OrbitLiveTextStyles.bodyMedium.copyWith(
                   color: OrbitLiveColors.darkGray,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -282,12 +305,12 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
 
   Widget _buildActions() {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: 40,
             child: ElevatedButton(
               onPressed: _handleGetStarted,
               style: ElevatedButton.styleFrom(
@@ -295,16 +318,18 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
                 foregroundColor: Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               child: Text(
                 'Get Started',
-                style: OrbitLiveTextStyles.buttonLarge,
+                style: OrbitLiveTextStyles.buttonLarge.copyWith(
+                  fontSize: 15,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           TextButton(
             onPressed: _handleClose,
             style: TextButton.styleFrom(
@@ -314,6 +339,7 @@ class _TravelBuddyOnboardingPopupState extends State<TravelBuddyOnboardingPopup>
               'Maybe Later',
               style: OrbitLiveTextStyles.bodyMedium.copyWith(
                 color: OrbitLiveColors.darkGray,
+                fontSize: 13,
               ),
             ),
           ),

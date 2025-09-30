@@ -44,6 +44,23 @@ class TravelBuddyProvider with ChangeNotifier {
     _loadInitialData();
   }
 
+  /// Initialize with a default user ID for testing
+  void initializeForTesting() {
+    _currentUserId = 'test_user_123';
+    _setupStreamListeners();
+    _loadInitialData();
+    
+    // Also trigger a search to show mock data
+    Future.delayed(Duration(milliseconds: 500), () {
+      if (_currentUserId != null) {
+        searchForBuddies(
+          route: 'Guntur Central to Tenali',
+          travelTime: DateTime.now().add(Duration(minutes: 10)),
+        );
+      }
+    });
+  }
+
   /// Setup stream listeners for real-time updates
   void _setupStreamListeners() {
     _matchesSubscription = _service.matchesStream.listen((matches) {

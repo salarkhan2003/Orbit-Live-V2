@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../main.dart' as main_app;
-import '../../../../core/clerk_auth_service.dart';
 // Import the user role
 import '../../../../features/auth/domain/user_role.dart';
+import '../../../../main.dart';
 
 class PassengerAuthScreen extends StatefulWidget {
   const PassengerAuthScreen({super.key});
@@ -162,11 +160,11 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
               child: Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       blurRadius: 15,
                       spreadRadius: 5,
                     ),
@@ -250,7 +248,7 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.2),
+                color: Colors.blue.withValues(alpha: 0.2),
                 blurRadius: 10,
                 offset: Offset(0, 5),
               ),
@@ -344,7 +342,7 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.grey.withValues(alpha: 0.2),
                     blurRadius: 5,
                     offset: Offset(0, 2),
                   ),
@@ -491,7 +489,7 @@ class _PassengerAuthScreenState extends State<PassengerAuthScreen>
       child: TextButton.icon(
         onPressed: () {
           // Skip login and create guest passenger user
-          Provider.of<main_app.AuthProvider>(context, listen: false).setAuthenticatedUser(
+          Provider.of<AuthProvider>(context, listen: false).setAuthenticatedUser(
             id: 'passenger_guest_${DateTime.now().millisecondsSinceEpoch}',
             email: 'guest@passenger.com',
             firstName: 'Guest',

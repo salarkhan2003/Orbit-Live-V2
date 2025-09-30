@@ -11,24 +11,30 @@ import 'features/auth/presentation/signup_page.dart';
 
 import 'features/auth/presentation/passenger/passenger_auth_screen.dart';
 import 'features/auth/presentation/driver/driver_auth_screen.dart';
-import 'features/auth/presentation/orbit_live_role_selection_page.dart';
+import 'features/auth/presentation/enhanced_role_selection_screen.dart';
+import 'features/auth/presentation/stylish_role_selection_screen.dart';
 import 'features/auth/presentation/enhanced_conductor_login_screen.dart';
 import 'features/auth/presentation/providers/role_selection_provider.dart';
 import 'features/travel_buddy/presentation/providers/travel_buddy_provider.dart';
 import 'features/travel_buddy/presentation/travel_buddy_screen.dart';
 import 'features/tickets/presentation/providers/ticket_provider.dart';
 import 'features/tickets/presentation/ticket_booking_screen.dart';
+import 'features/tickets/presentation/all_tickets_screen.dart';
 import 'features/passes/presentation/providers/pass_provider.dart';
 import 'features/passes/presentation/pass_application_screen.dart';
+import 'features/passes/presentation/all_passes_screen.dart';
 import 'features/passenger/presentation/passenger_dashboard.dart';
 import 'features/driver/presentation/driver_dashboard.dart';
 import 'features/guest/presentation/guest_dashboard.dart';
-import 'features/map/openstreet_map_screen.dart';
+import 'features/map/enhanced_map_screen.dart';
 import 'features/splash/presentation/splash_screen.dart';
 import 'features/onboarding/presentation/onboarding_screen.dart';
 import 'shared/utils/performance_optimizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Removed role_selection_splash_screen - replaced with OrbitLiveRoleSelectionPage
+
+// Add navigator key for accessing context globally
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,17 +96,27 @@ class MyApp extends StatelessWidget {
               '/onboarding': (context) => OnboardingScreen(),
               '/login': (context) => LoginPage(),
               '/signup': (context) => SignupPage(),
-              '/role-selection': (context) => OrbitLiveRoleSelectionPage(),
+              '/role-selection': (context) => StylishRoleSelectionScreen(),
               '/passenger-auth': (context) => PassengerAuthScreen(),
               '/driver-auth': (context) => DriverAuthScreen(),
               '/enhanced-conductor-login': (context) => EnhancedConductorLoginScreen(),
-              '/travel-buddy': (context) => TravelBuddyScreen(),
               '/ticket-booking': (context) => TicketBookingScreen(),
               '/pass-application': (context) => PassApplicationScreen(),
+              '/all-tickets': (context) => AllTicketsScreen(),
+              '/all-passes': (context) => AllPassesScreen(),
               '/passenger': (context) => PassengerDashboard(),
               '/driver': (context) => DriverDashboard(),
               '/guest-dashboard': (context) => GuestDashboard(),
-              '/map': (context) => OpenStreetMapScreen(userRole: Provider.of<AuthProvider>(context, listen: false).user?.role?.name ?? 'guest'),
+              '/map': (context) => EnhancedMapScreen(userRole: Provider.of<AuthProvider>(context, listen: false).user?.role?.name ?? 'guest'),
+            },
+            onGenerateRoute: (settings) {
+              if (settings.name == '/travel-buddy') {
+                final args = settings.arguments as Map<String, String>?;
+                return MaterialPageRoute(
+                  builder: (context) => TravelBuddyScreen(arguments: args),
+                );
+              }
+              return null;
             },
           );
         },
@@ -164,12 +180,18 @@ class _AuthGateState extends State<AuthGate> {
           return SplashScreen();
         }
 
+        // Initialize travel buddy provider with user ID
+        if (authProvider.user != null) {
+          final travelBuddyProvider = Provider.of<TravelBuddyProvider>(context, listen: false);
+          travelBuddyProvider.initialize(authProvider.user!.id);
+        }
+
         if (authProvider.user == null) {
-          return OrbitLiveRoleSelectionPage();
+          return StylishRoleSelectionScreen();
         }
 
         if (authProvider.user?.role == null) {
-          return OrbitLiveRoleSelectionPage();
+          return EnhancedRoleSelectionScreen();
         }
 
         switch (authProvider.user?.role) {
@@ -178,7 +200,7 @@ class _AuthGateState extends State<AuthGate> {
           case UserRole.driver:
             return DriverDashboard();
           default:
-            return OrbitLiveRoleSelectionPage();
+            return StylishRoleSelectionScreen();
         }
       },
     );
@@ -245,6 +267,12 @@ class AuthProvider with ChangeNotifier {
     try {
       _user = await AuthService.signIn(email, password);
       _isAuthenticated = _user != null;
+      
+      // Initialize travel buddy provider with user ID if login successful
+      if (_user != null) {
+        final travelBuddyProvider = Provider.of<TravelBuddyProvider>(navigatorKey.currentContext!, listen: false);
+        travelBuddyProvider.initialize(_user!.id);
+      }
     } catch (e) {
       _isAuthenticated = false;
       _user = null;
@@ -262,6 +290,12 @@ class AuthProvider with ChangeNotifier {
     try {
       _user = await AuthService.signUp(email, password);
       _isAuthenticated = _user != null;
+      
+      // Initialize travel buddy provider with user ID if signup successful
+      if (_user != null) {
+        final travelBuddyProvider = Provider.of<TravelBuddyProvider>(navigatorKey.currentContext!, listen: false);
+        travelBuddyProvider.initialize(_user!.id);
+      }
     } catch (e) {
       _isAuthenticated = false;
       _user = null;
