@@ -163,7 +163,7 @@ void main() {
 
       // Initially password should be obscured
       TextFormField field = tester.widget<TextFormField>(passwordField);
-      expect(field.obscureText, true);
+      expect(field.obscureText, isTrue);
 
       // Tap visibility toggle
       await tester.tap(find.byIcon(Icons.visibility_outlined));
@@ -171,7 +171,7 @@ void main() {
 
       // Password should now be visible
       field = tester.widget<TextFormField>(passwordField);
-      expect(field.obscureText, false);
+      expect(field.obscureText, isFalse);
 
       // Tap again to hide
       await tester.tap(find.byIcon(Icons.visibility_off_outlined));
@@ -179,7 +179,7 @@ void main() {
 
       // Password should be obscured again
       field = tester.widget<TextFormField>(passwordField);
-      expect(field.obscureText, true);
+      expect(field.obscureText, isTrue);
     });
 
     testWidgets('shows loading state during authentication', (tester) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'responsive_extensions.dart'; // Add this import for responsive extensions
 
 class AppValidator {
   /// Validate that all critical screens are accessible
@@ -62,7 +63,7 @@ class AppValidator {
             : '❌ App validation failed!',
         ),
         backgroundColor: isValid ? Colors.green : Colors.red,
-        duration: Duration(seconds: 3),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

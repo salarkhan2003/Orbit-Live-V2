@@ -179,7 +179,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
               ),
               SizedBox(height: 15),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(

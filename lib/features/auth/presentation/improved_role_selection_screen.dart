@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../main.dart';
-import '../../../core/localization_service.dart';
 import '../../../shared/orbit_live_colors.dart';
-import '../../../shared/orbit_live_animations.dart';
-import '../../../shared/utils/responsive_helper.dart';
 import '../domain/user_role.dart';
 import '../../travel_buddy/presentation/providers/travel_buddy_provider.dart';
 
-/// Enhanced role selection screen with modern, stylish UI/UX
-class EnhancedRoleSelectionScreen extends StatefulWidget {
-  const EnhancedRoleSelectionScreen({super.key});
+/// Improved role selection screen with clean, modern UI/UX
+class ImprovedRoleSelectionScreen extends StatefulWidget {
+  const ImprovedRoleSelectionScreen({super.key});
 
   @override
-  State<EnhancedRoleSelectionScreen> createState() => _EnhancedRoleSelectionScreenState();
+  State<ImprovedRoleSelectionScreen> createState() => _ImprovedRoleSelectionScreenState();
 }
 
-class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScreen>
+class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScreen>
     with TickerProviderStateMixin {
+  UserRole? _selectedRole;
+  bool _isLoading = false;
+
   late AnimationController _backgroundController;
   late AnimationController _cardController;
   late AnimationController _buttonController;
@@ -26,9 +26,6 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
   late Animation<double> _cardScaleAnimation;
   late Animation<Offset> _cardSlideAnimation;
   late Animation<double> _buttonPulseAnimation;
-  
-  UserRole? _selectedRole;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -36,12 +33,12 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
     
     // Initialize animation controllers
     _backgroundController = AnimationController(
-      duration: const Duration(seconds: 10),
+      duration: const Duration(seconds: 20),
       vsync: this,
     )..repeat();
     
     _cardController = AnimationController(
-      duration: OrbitLiveAnimations.longDuration,
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     
@@ -55,23 +52,23 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
       CurvedAnimation(parent: _backgroundController, curve: Curves.linear),
     );
     
-    _cardScaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _cardController, curve: OrbitLiveAnimations.bounceCurve),
+    _cardScaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
+      CurvedAnimation(parent: _cardController, curve: Curves.elasticOut),
     );
     
     _cardSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.5),
+      begin: const Offset(0.0, 0.3),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(parent: _cardController, curve: OrbitLiveAnimations.cardSlideCurve),
+      CurvedAnimation(parent: _cardController, curve: Curves.elasticOut),
     );
     
-    _buttonPulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+    _buttonPulseAnimation = Tween<double>(begin: 1.0, end: 1.03).animate(
       CurvedAnimation(parent: _buttonController, curve: Curves.easeInOut),
     );
     
     // Start animations with stagger
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) {
         _cardController.forward();
       }
@@ -117,7 +114,6 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
             break;
           case UserRole.driver:
             Navigator.pushReplacementNamed(context, '/driver');
-            break;
           case null:
             break;
         }
@@ -130,7 +126,6 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
             break;
           case UserRole.driver:
             Navigator.pushReplacementNamed(context, '/enhanced-conductor-login');
-            break;
           case null:
             break;
         }
@@ -241,23 +236,45 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              OrbitLiveColors.primaryBlue,
-              OrbitLiveColors.primaryTeal,
+              Color(0xFF6A11CB),
+              Color(0xFF2575FC),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
-        child: Stack(
-          children: [
-            // Animated background elements
-            _buildAnimatedBackground(),
-            
-            // Main content
-            SafeArea(
-              child: _isLoading ? _buildLoadingState() : _buildMainContent(),
-            ),
-          ],
+        child: SafeArea(
+          child: _isLoading 
+            ? _buildLoadingState() 
+            : Stack(
+                children: [
+                  // Animated background
+                  _buildAnimatedBackground(),
+                  
+                  // Main content
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        // Header
+                        _buildHeader(),
+                        
+                        const SizedBox(height: 40),
+                        
+                        // Role cards
+                        Expanded(
+                          child: _buildRoleCards(),
+                        ),
+                        
+                        const SizedBox(height: 30),
+                        
+                        // Action buttons
+                        _buildActionButtons(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
         ),
       ),
     );
@@ -300,143 +317,56 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
     );
   }
   
-  Widget _buildMainContent() {
-    return SingleChildScrollView(
-      padding: ResponsiveHelper.getResponsivePadding(context),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Header section
-          _buildHeader(),
-          
-          const SizedBox(height: 40),
-          
-          // Role cards section
-          _buildRoleCards(),
-          
-          const SizedBox(height: 40),
-          
-          // Action buttons section
-          _buildActionButtons(),
-          
-          const SizedBox(height: 20),
-          
-          // Footer
-          _buildFooter(),
-        ],
-      ),
-    );
-  }
-  
   Widget _buildHeader() {
-    return FadeTransition(
-      opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _cardController, curve: const Interval(0.0, 0.5)),
-      ),
-      child: Column(
-        children: [
-          // App logo/branding
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.directions_bus,
-              size: 60,
-              color: Colors.white,
-            ),
+    return Column(
+      children: [
+        // App logo
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
           ),
-          
-          const SizedBox(height: 20),
-          
-          // Title
-          Text(
-            'Orbit Live',
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: Colors.white, // Keep white for contrast on gradient background
-              letterSpacing: 1.2,
-              shadows: [
-                Shadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  offset: const Offset(0, 2),
-                  blurRadius: 4,
-                ),
-              ],
-            ),
+          child: Icon(
+            Icons.directions_bus,
+            size: 64,
+            color: Colors.white,
           ),
-          
-          const SizedBox(height: 10),
-          
-          // Subtitle
-          Text(
-            'Choose your role to get started',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w400,
-              color: Colors.white, // Keep white for contrast on gradient background
-              letterSpacing: 0.5,
-            ),
+        ),
+        
+        const SizedBox(height: 24),
+        
+        // Title
+        Text(
+          'Orbit Live',
+          style: TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 1.2,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                offset: const Offset(0, 2),
+                blurRadius: 4,
+              ),
+            ],
           ),
-          
-          const SizedBox(height: 20),
-          
-          // Language selector
-          _buildLanguageSelector(),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildLanguageSelector() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: PopupMenuButton<Locale>(
-        icon: const Icon(
-          Icons.language,
-          color: Colors.white,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+        
+        const SizedBox(height: 12),
+        
+        // Subtitle
+        Text(
+          'Choose your role to get started',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+            color: Colors.white70,
+            letterSpacing: 0.5,
+          ),
         ),
-        onSelected: (locale) {
-          Provider.of<LocalizationProvider>(context, listen: false).setLocale(locale);
-        },
-        itemBuilder: (context) => [
-          _buildLanguageMenuItem(context, const Locale('en', 'US'), 'english'),
-          _buildLanguageMenuItem(context, const Locale('pa', 'IN'), 'punjabi'),
-          _buildLanguageMenuItem(context, const Locale('hi', 'IN'), 'hindi'),
-          _buildLanguageMenuItem(context, const Locale('te', 'IN'), 'telugu'),
-          _buildLanguageMenuItem(context, const Locale('ta', 'IN'), 'tamil'),
-          _buildLanguageMenuItem(context, const Locale('ml', 'IN'), 'malayalam'),
-          _buildLanguageMenuItem(context, const Locale('kn', 'IN'), 'kannada'),
-          _buildLanguageMenuItem(context, const Locale('mr', 'IN'), 'marathi'),
-          _buildLanguageMenuItem(context, const Locale('bn', 'IN'), 'bengali'),
-        ],
-      ),
-    );
-  }
-  
-  PopupMenuItem<Locale> _buildLanguageMenuItem(
-    BuildContext context,
-    Locale locale,
-    String translationKey,
-  ) {
-    return PopupMenuItem(
-      value: locale,
-      child: Text(
-        context.translate(translationKey),
-        style: const TextStyle(
-          color: Colors.black, // Changed from Colors.black to ensure visibility
-          fontSize: 16,
-        ),
-      ),
+      ],
     );
   }
   
@@ -446,27 +376,26 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
       child: ScaleTransition(
         scale: _cardScaleAnimation,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Passenger Card
             _buildRoleCard(
               title: 'Passenger',
-              subtitle: 'Book tickets and track buses in real-time',
-              description: 'Find your perfect ride with live tracking, ticket booking, and travel buddy features',
+              description: 'Book tickets, track buses in real-time, and find travel buddies',
               icon: Icons.person,
-              gradientColors: const [Colors.blue, Colors.lightBlue],
+              color: Color(0xFF3498db),
               onTap: () => _selectRole(UserRole.passenger),
               isSelected: _selectedRole == UserRole.passenger,
             ),
             
-            const SizedBox(height: 25),
+            const SizedBox(height: 30),
             
             // Driver Card
             _buildRoleCard(
               title: 'Driver',
-              subtitle: 'Manage trips and routes efficiently',
-              description: 'Track your passengers, manage schedules, and optimize your routes with our driver tools',
+              description: 'Manage trips, track passengers, and optimize your routes',
               icon: Icons.drive_eta,
-              gradientColors: const [Colors.green, Colors.lightGreen],
+              color: Color(0xFF2ecc71),
               onTap: () => _selectRole(UserRole.driver),
               isSelected: _selectedRole == UserRole.driver,
             ),
@@ -478,112 +407,101 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
   
   Widget _buildRoleCard({
     required String title,
-    required String subtitle,
     required String description,
     required IconData icon,
-    required List<Color> gradientColors,
+    required Color color,
     required VoidCallback onTap,
     required bool isSelected,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+      child: Container(
+        height: 140, // Reduced height to prevent overlay issues
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: gradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          borderRadius: BorderRadius.circular(24),
+          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.15),
           boxShadow: [
             BoxShadow(
               color: isSelected 
-                  ? gradientColors.first.withValues(alpha: 0.5) 
+                  ? color.withValues(alpha: 0.4) 
                   : Colors.black.withValues(alpha: 0.2),
-              blurRadius: isSelected ? 20 : 10,
+              blurRadius: isSelected ? 20 : 12,
               spreadRadius: isSelected ? 2 : 0,
-              offset: const Offset(0, 5),
+              offset: const Offset(0, 8),
             ),
           ],
           border: Border.all(
-            color: isSelected ? Colors.white : Colors.transparent,
-            width: isSelected ? 2 : 0,
+            color: isSelected ? color : Colors.white.withValues(alpha: 0.2),
+            width: isSelected ? 2 : 1,
           ),
         ),
-        child: Container(
-          padding: const EdgeInsets.all(25),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Icon and title row
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 30,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          subtitle,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Selection indicator
-                  if (isSelected)
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.green,
-                        size: 20,
-                      ),
-                    ),
-                ],
-              ),
-              
-              const SizedBox(height: 15),
-              
-              // Description
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.white70,
-                  height: 1.5,
+        child: Row(
+          children: [
+            // Icon container
+            Container(
+              width: 100, // Reduced width to prevent overlay issues
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? color.withValues(alpha: 0.2) 
+                    : Colors.white.withValues(alpha: 0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  bottomLeft: Radius.circular(24),
                 ),
               ),
-            ],
-          ),
+              child: Icon(
+                icon,
+                size: 40, // Reduced icon size to prevent overlay issues
+                color: isSelected ? color : Colors.white70,
+              ),
+            ),
+            
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16), // Reduced padding to prevent overlay issues
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 20, // Reduced font size to prevent overlay issues
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? color : Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6), // Reduced spacing to prevent overlay issues
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 13, // Reduced font size to prevent overlay issues
+                        color: isSelected ? Colors.black87 : Colors.white70,
+                        height: 1.3, // Reduced line height to prevent overlay issues
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Selection indicator
+            if (isSelected)
+              Container(
+                margin: const EdgeInsets.only(right: 16), // Reduced margin to prevent overlay issues
+                padding: const EdgeInsets.all(10), // Reduced padding to prevent overlay issues
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 20, // Reduced icon size to prevent overlay issues
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -592,36 +510,39 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
   Widget _buildActionButtons() {
     return Column(
       children: [
-        // Primary action button (Next/Continue)
+        // Primary action button with shorter text to prevent overlay issues
         ScaleTransition(
           scale: _buttonPulseAnimation,
           child: SizedBox(
             width: double.infinity,
-            height: 55,
+            height: 50, // Reduced height to prevent overlay issues
             child: ElevatedButton(
               onPressed: _selectedRole != null ? _submitRole : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
-                foregroundColor: OrbitLiveColors.primaryTeal,
+                foregroundColor: Color(0xFF2575FC),
                 elevation: 10,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 disabledBackgroundColor: Colors.white30,
                 padding: EdgeInsets.zero,
               ),
               child: Text(
-                'Continue as ${_selectedRole?.displayName ?? 'Selected Role'}',
+                _selectedRole != null 
+                  ? 'Continue as ${_selectedRole!.displayName}' 
+                  : 'Select Role',
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 15, // Reduced font size to prevent overlay issues
                   fontWeight: FontWeight.bold,
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),
         ),
         
-        const SizedBox(height: 20),
+        const SizedBox(height: 16), // Reduced spacing to prevent overlay issues
         
         // Secondary actions row
         Row(
@@ -632,9 +553,9 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
                 onPressed: _skipSelection,
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 14), // Reduced padding to prevent overlay issues
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(16),
                     side: BorderSide(
                       color: Colors.white.withValues(alpha: 0.5),
                     ),
@@ -643,14 +564,14 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
                 child: const Text(
                   'Skip',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 15, // Reduced font size to prevent overlay issues
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
             
-            const SizedBox(width: 15),
+            const SizedBox(width: 12), // Reduced spacing to prevent overlay issues
             
             // Sign Up button
             Expanded(
@@ -661,16 +582,16 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
                   side: BorderSide(
                     color: Colors.white.withValues(alpha: 0.5),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 14), // Reduced padding to prevent overlay issues
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 child: const Text(
                   'Sign Up',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 15, // Reduced font size to prevent overlay issues
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -678,7 +599,7 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
           ],
         ),
         
-        const SizedBox(height: 15),
+        const SizedBox(height: 12), // Reduced spacing to prevent overlay issues
         
         // Login button
         SizedBox(
@@ -690,40 +611,18 @@ class _EnhancedRoleSelectionScreenState extends State<EnhancedRoleSelectionScree
               side: BorderSide(
                 color: Colors.white.withValues(alpha: 0.5),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 14), // Reduced padding to prevent overlay issues
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: const Text(
               'Login',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+                fontSize: 15, // Reduced font size to prevent overlay issues
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildFooter() {
-    return const Column(
-      children: [
-        Text(
-          '© 2025 Orbit Live',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 14,
-          ),
-        ),
-        SizedBox(height: 5),
-        Text(
-          'All rights reserved',
-          style: TextStyle(
-            color: Colors.white54,
-            fontSize: 12,
           ),
         ),
       ],
@@ -744,10 +643,10 @@ class AnimatedBackgroundPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     // Draw animated circles
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 20; i++) {
       final progress = (animationValue + i * 0.1) % 1.0;
-      final radius = 5 + (progress * 10);
-      final x = (size.width * 0.1) + (i * size.width * 0.08) % size.width;
+      final radius = 5 + (progress * 15);
+      final x = (size.width * 0.1) + (i * size.width * 0.1) % size.width;
       final y = (size.height * 0.2) + (progress * size.height * 0.6);
       
       canvas.drawCircle(Offset(x, y), radius, paint);

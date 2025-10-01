@@ -50,8 +50,8 @@ class TravelBuddyProvider with ChangeNotifier {
     _setupStreamListeners();
     _loadInitialData();
     
-    // Also trigger a search to show mock data
-    Future.delayed(Duration(milliseconds: 500), () {
+    // Trigger a search to show mock data immediately
+    Future.microtask(() {
       if (_currentUserId != null) {
         searchForBuddies(
           route: 'Guntur Central to Tenali',

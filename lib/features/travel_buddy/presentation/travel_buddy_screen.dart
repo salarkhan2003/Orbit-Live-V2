@@ -23,6 +23,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
   final _sourceController = TextEditingController();
   final _destinationController = TextEditingController();
   DateTime? _selectedTravelTime;
+  bool _hasSearched = false; // Track if user has performed a search
 
   @override
   void initState() {
@@ -56,14 +57,32 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
   void _initializeWithMockData() {
     final provider = Provider.of<TravelBuddyProvider>(context, listen: false);
     
-    // If no search has been performed yet, do an initial search
-    if (provider.matches.isEmpty && provider.currentRoute == null) {
-      Future.delayed(Duration(milliseconds: 500), () {
-        if (mounted) {
-          _searchForBuddies(provider);
-        }
-      });
-    }
+    // Always show mock data - initialize with default user and search
+    provider.initializeForTesting();
+    
+    // Set flag to indicate we've shown default buddies
+    setState(() {
+      _hasSearched = true;
+    });
+  }
+
+  void _searchForBuddies(TravelBuddyProvider provider) {
+    // Always allow search, even with empty fields - show default buddies
+    final route = _sourceController.text.isEmpty || _destinationController.text.isEmpty
+        ? 'Guntur Central to Tenali' // Default route if fields are empty
+        : '${_sourceController.text} to ${_destinationController.text}';
+    
+    final travelTime = _selectedTravelTime ?? DateTime.now().add(const Duration(minutes: 10));
+
+    provider.searchForBuddies(
+      route: route,
+      travelTime: travelTime,
+    );
+
+    // Mark that a search has been performed
+    setState(() {
+      _hasSearched = true;
+    });
   }
 
   @override
@@ -171,14 +190,238 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
                 _buildLoadingIndicator()
               else if (provider.matches.isNotEmpty)
                 _buildMatchesList(provider)
-              else if (provider.currentRoute != null)
+              else if (_hasSearched && provider.currentRoute != null)
                 _buildNoMatchesFound()
               else
-                _buildSearchPrompt(),
+                _buildDefaultMatches(provider), // Show default mock buddies
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDefaultMatches(TravelBuddyProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Suggested Travel Buddies',
+          style: OrbitLiveTextStyles.bodyLarge.copyWith(
+            fontWeight: FontWeight.w600,
+            color: OrbitLiveColors.black,
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Show a message that these are default suggestions
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'These are sample travel buddies. Use the search above to find buddies for your specific route.',
+            style: OrbitLiveTextStyles.bodySmall.copyWith(
+              color: Colors.blue,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Show default mock buddies
+        _buildDefaultBuddyList(),
+      ],
+    );
+  }
+
+  Widget _buildDefaultBuddyList() {
+    // Create some default mock buddies to show
+    final defaultBuddies = [
+      TravelBuddyProfile(
+        id: 'default_1',
+        name: 'Raj Kumar',
+        route: 'Guntur Central to Tenali',
+        travelTime: DateTime.now().add(const Duration(minutes: 15)),
+        genderPreference: GenderPreference.male,
+        languages: ['Telugu', 'English'],
+        rating: 4.7,
+        completedTrips: 18,
+        isOnline: true,
+        bio: 'Daily commuter from Guntur to Tenali',
+      ),
+      TravelBuddyProfile(
+        id: 'default_2',
+        name: 'Priya Reddy',
+        route: 'Guntur to Mangalagiri',
+        travelTime: DateTime.now().add(const Duration(minutes: 20)),
+        genderPreference: GenderPreference.female,
+        languages: ['Telugu', 'English'],
+        rating: 4.5,
+        completedTrips: 25,
+        isOnline: true,
+        bio: 'Software engineer traveling to Mangalagiri tech park',
+      ),
+      TravelBuddyProfile(
+        id: 'default_3',
+        name: 'Arun Patel',
+        route: 'RTC Bus Stand to Namburu',
+        travelTime: DateTime.now().add(const Duration(minutes: 10)),
+        genderPreference: GenderPreference.male,
+        languages: ['Hindi', 'English'],
+        rating: 4.3,
+        completedTrips: 12,
+        isOnline: true,
+        bio: 'College student looking for travel buddies',
+      ),
+    ];
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: defaultBuddies.length,
+      itemBuilder: (context, index) {
+        return _buildDefaultBuddyCard(defaultBuddies[index]);
+      },
+    );
+  }
+
+  Widget _buildDefaultBuddyCard(TravelBuddyProfile buddy) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: OrbitLiveColors.primaryTeal.withValues(alpha: 0.1),
+                child: Text(
+                  buddy.name.substring(0, 1).toUpperCase(),
+                  style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                    color: OrbitLiveColors.primaryTeal,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          buddy.name,
+                          style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: OrbitLiveColors.black,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (buddy.isOnline)
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                      ],
+                    ),
+                    // Add gender information
+                    if (buddy.genderPreference != GenderPreference.any)
+                      Text(
+                        _getGenderText(buddy.genderPreference),
+                        style: OrbitLiveTextStyles.bodySmall.copyWith(
+                          color: _getGenderColor(buddy.genderPreference),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    Text(
+                      '⭐ ${buddy.rating.toStringAsFixed(1)} • ${buddy.completedTrips} trips',
+                      style: OrbitLiveTextStyles.bodySmall.copyWith(
+                        color: OrbitLiveColors.darkGray,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Route: ${buddy.route}',
+            style: OrbitLiveTextStyles.bodyMedium.copyWith(
+              color: OrbitLiveColors.black,
+            ),
+          ),
+          Text(
+            'Travel Time: ${_formatTime(buddy.travelTime)}',
+            style: OrbitLiveTextStyles.bodyMedium.copyWith(
+              color: OrbitLiveColors.black,
+            ),
+          ),
+          if (buddy.bio != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              buddy.bio!,
+              style: OrbitLiveTextStyles.bodySmall.copyWith(
+                color: OrbitLiveColors.darkGray,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('In a real app, this would send a request to ${buddy.name}'),
+                        backgroundColor: Colors.blue,
+                      ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: OrbitLiveColors.primaryTeal,
+                    side: const BorderSide(color: OrbitLiveColors.primaryTeal),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Send Request'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Viewing ${buddy.name}\'s profile')),
+                  );
+                },
+                icon: const Icon(Icons.info_outline),
+                color: OrbitLiveColors.darkGray,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -270,7 +513,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
                         ? 'Travel Time: ${_formatTime(_selectedTravelTime!)}'
                         : 'Select Travel Time',
                     style: OrbitLiveTextStyles.bodyMedium.copyWith(
-                      color: OrbitLiveColors.black, // Ensure visibility
+                      color: OrbitLiveColors.black,
                     ),
                   ),
                   const Spacer(),
@@ -284,7 +527,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: _canSearch() ? () => _searchForBuddies(provider) : null,
+              onPressed: () => _searchForBuddies(provider), // Always allow search
               style: ElevatedButton.styleFrom(
                 backgroundColor: OrbitLiveColors.primaryTeal,
                 foregroundColor: Colors.white,
@@ -373,7 +616,7 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
                           buddy.name,
                           style: OrbitLiveTextStyles.bodyLarge.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: OrbitLiveColors.black, // Ensure visibility
+                            color: OrbitLiveColors.black,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -388,6 +631,15 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
                           ),
                       ],
                     ),
+                    // Add gender information
+                    if (buddy.genderPreference != GenderPreference.any)
+                      Text(
+                        _getGenderText(buddy.genderPreference),
+                        style: OrbitLiveTextStyles.bodySmall.copyWith(
+                          color: _getGenderColor(buddy.genderPreference),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     Text(
                       '⭐ ${buddy.rating.toStringAsFixed(1)} • ${buddy.completedTrips} trips',
                       style: OrbitLiveTextStyles.bodySmall.copyWith(
@@ -403,13 +655,13 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
           Text(
             'Route: ${buddy.route}',
             style: OrbitLiveTextStyles.bodyMedium.copyWith(
-              color: OrbitLiveColors.black, // Ensure visibility
+              color: OrbitLiveColors.black,
             ),
           ),
           Text(
             'Travel Time: ${_formatTime(buddy.travelTime)}',
             style: OrbitLiveTextStyles.bodyMedium.copyWith(
-              color: OrbitLiveColors.black, // Ensure visibility
+              color: OrbitLiveColors.black,
             ),
           ),
           if (buddy.bio != null) ...[
@@ -475,6 +727,10 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
   }
 
   Widget _buildRequestCard(BuddyRequest request, TravelBuddyProvider provider) {
+    // We need to get the sender's profile to display gender information
+    // For now, we'll just display basic request info
+    // In a real implementation, you would fetch the sender's profile
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -621,6 +877,15 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    // Add gender information if available
+                    if (buddy != null && buddy.genderPreference != GenderPreference.any)
+                      Text(
+                        _getGenderText(buddy.genderPreference),
+                        style: OrbitLiveTextStyles.bodySmall.copyWith(
+                          color: _getGenderColor(buddy.genderPreference),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     Text(
                       'Connected • ${connection.route}',
                       style: OrbitLiveTextStyles.bodySmall.copyWith(
@@ -690,8 +955,9 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
         ],
       ),
     );
-  }  Widget
- _buildEmptyState({
+  }
+
+  Widget _buildEmptyState({
     required IconData icon,
     required String title,
     required String subtitle,
@@ -808,18 +1074,6 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
     }
   }
 
-  Future<void> _searchForBuddies(TravelBuddyProvider provider) async {
-    if (!_canSearch()) return;
-    
-    // Use separate source and destination fields instead of combining them
-    final route = '${_sourceController.text} to ${_destinationController.text}';
-    
-    await provider.searchForBuddies(
-      route: route,
-      travelTime: _selectedTravelTime!,
-    );
-  }
-
   Future<void> _sendBuddyRequest(TravelBuddyProfile buddy, TravelBuddyProvider provider) async {
     final success = await provider.sendBuddyRequest(receiverId: buddy.id);
     
@@ -920,6 +1174,29 @@ class _TravelBuddyScreenState extends State<TravelBuddyScreen>
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  // Helper methods to display gender information
+  String _getGenderText(GenderPreference gender) {
+    switch (gender) {
+      case GenderPreference.male:
+        return 'Male';
+      case GenderPreference.female:
+        return 'Female';
+      case GenderPreference.any:
+        return '';
+    }
+  }
+
+  Color _getGenderColor(GenderPreference gender) {
+    switch (gender) {
+      case GenderPreference.male:
+        return Colors.blue;
+      case GenderPreference.female:
+        return Colors.pink;
+      case GenderPreference.any:
+        return Colors.transparent;
     }
   }
 }

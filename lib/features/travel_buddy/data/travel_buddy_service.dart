@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../domain/travel_buddy_models.dart';
 
@@ -37,7 +36,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'Downtown to Airport',
           travelTime: DateTime.now().add(Duration(minutes: 15)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.female,
           languages: ['English', 'Spanish'],
           rating: 4.8,
           completedTrips: 23,
@@ -50,7 +49,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'University to Mall',
           travelTime: DateTime.now().add(Duration(minutes: 20)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.male,
           languages: ['English', 'Mandarin'],
           rating: 4.6,
           completedTrips: 15,
@@ -78,7 +77,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'Guntur Central to Tenali',
           travelTime: DateTime.now().add(Duration(minutes: 5)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.male,
           languages: ['Telugu', 'English'],
           rating: 4.7,
           completedTrips: 18,
@@ -104,7 +103,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'RTC Bus Stand to Namburu',
           travelTime: DateTime.now().add(Duration(minutes: 8)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.male,
           languages: ['Hindi', 'English'],
           rating: 4.3,
           completedTrips: 12,
@@ -131,7 +130,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'Lakshmipuram to Pedakakani',
           travelTime: DateTime.now().add(Duration(minutes: 25)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.male,
           languages: ['Telugu', 'English'],
           rating: 4.2,
           completedTrips: 9,
@@ -145,7 +144,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'Guntur to Tenali',
           travelTime: DateTime.now().add(Duration(minutes: 7)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.male,
           languages: ['Telugu', 'English'],
           rating: 4.6,
           completedTrips: 22,
@@ -172,7 +171,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'Guntur Central to Tenali',
           travelTime: DateTime.now().add(Duration(minutes: 6)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.male,
           languages: ['Telugu', 'English'],
           rating: 4.4,
           completedTrips: 15,
@@ -198,7 +197,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'Lakshmipuram to Namburu',
           travelTime: DateTime.now().add(Duration(minutes: 9)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.male,
           languages: ['Telugu', 'Hindi'],
           rating: 4.2,
           completedTrips: 18,
@@ -224,7 +223,7 @@ class TravelBuddyService {
           profileImageUrl: null,
           route: 'Guntur to Amaravati Road',
           travelTime: DateTime.now().add(Duration(minutes: 20)),
-          genderPreference: GenderPreference.any,
+          genderPreference: GenderPreference.male,
           languages: ['Telugu', 'English'],
           rating: 4.3,
           completedTrips: 12,
@@ -389,58 +388,48 @@ class TravelBuddyService {
     }
   }
 
-  /// Find potential travel buddies based on route and preferences
+  /// Find matching travel buddies based on route and time
   Future<List<TravelBuddyProfile>> findMatches({
     required String route,
     required DateTime travelTime,
     required TravelBuddyPreferences preferences,
     required String currentUserId,
   }) async {
+    // Ensure mock data is initialized
     _initializeMockData();
     
     // Simulate network delay
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 800));
     
-    // Filter matches based on criteria
-    final matches = _mockProfiles.where((profile) {
-      // Don't match with self
-      if (profile.id == currentUserId) return false;
+    // Filter profiles based on route similarity and time window
+    final timeWindow = preferences.timeWindowMinutes;
+    final matches = <TravelBuddyProfile>[];
+    
+    for (var profile in _mockProfiles) {
+      // Skip the current user
+      if (profile.id == currentUserId) continue;
       
-      // Check route similarity (simplified)
-      if (!_isRouteSimilar(route, profile.route)) return false;
-      
-      // Check time window
-      final timeDiff = profile.travelTime.difference(travelTime).inMinutes.abs();
-      if (timeDiff > preferences.timeWindowMinutes) return false;
-      
-      // Check gender preference
-      if (preferences.genderPreference != GenderPreference.any) {
-        // In a real app, you'd have user gender data
-        // For now, we'll assume all preferences match
+      // Check if route is similar (for demo, we'll do a simple contains check)
+      if (profile.route.toLowerCase().contains(route.toLowerCase().split(' to ')[0]) ||
+          profile.route.toLowerCase().contains(route.toLowerCase().split(' to ')[1]) ||
+          route.toLowerCase().contains(profile.route.toLowerCase().split(' to ')[0]) ||
+          route.toLowerCase().contains(profile.route.toLowerCase().split(' to ')[1])) {
+        
+        // Check if travel time is within window
+        final timeDifference = profile.travelTime.difference(travelTime).inMinutes.abs();
+        if (timeDifference <= timeWindow) {
+          matches.add(profile);
+        }
       }
-      
-      // Check language compatibility
-      if (preferences.preferredLanguages.isNotEmpty) {
-        final hasCommonLanguage = profile.languages
-            .any((lang) => preferences.preferredLanguages.contains(lang));
-        if (!hasCommonLanguage) return false;
-      }
-      
-      return true;
-    }).toList();
+    }
     
-    // Sort by rating and online status
-    matches.sort((a, b) {
-      if (a.isOnline && !b.isOnline) return -1;
-      if (!a.isOnline && b.isOnline) return 1;
-      return b.rating.compareTo(a.rating);
-    });
+    // If no matches found, return some random profiles for demo purposes
+    if (matches.isEmpty) {
+      // Return first 5 profiles as demo matches
+      return _mockProfiles.take(5).toList();
+    }
     
-    // Limit to 10 matches for better performance
-    final limitedMatches = matches.length > 10 ? matches.sublist(0, 10) : matches;
-    
-    _matchesController.add(limitedMatches);
-    return limitedMatches;
+    return matches;
   }
 
   /// Send a buddy request
@@ -586,68 +575,6 @@ class TravelBuddyService {
     }
     
     return true;
-  }
-
-  /// Check if two routes are similar (simplified implementation)
-  bool _isRouteSimilar(String route1, String route2) {
-    // In a real implementation, this would use GPS coordinates
-    // and calculate actual route similarity
-    
-    // Convert to lowercase for case-insensitive comparison
-    final normalizedRoute1 = route1.toLowerCase();
-    final normalizedRoute2 = route2.toLowerCase();
-    
-    // Check for exact match first
-    if (normalizedRoute1 == normalizedRoute2) return true;
-    
-    // Check for Guntur-specific route matching
-    final gunturLocations = [
-      'guntur', 'guntur central', 'rtc bus stand', 'lakshmipuram', 
-      'namburu', 'gurazala', 'kollipara', 'tenali', 'mangalagiri',
-      'amaravati road', 'pedakakani'
-    ];
-    
-    // Extract location keywords from both routes
-    final route1Words = normalizedRoute1.split(RegExp(r'[^\w]+'));
-    final route2Words = normalizedRoute2.split(RegExp(r'[^\w]+'));
-    
-    // Check if both routes contain the same Guntur locations
-    bool hasCommonGunturLocations = false;
-    for (String location in gunturLocations) {
-      bool inRoute1 = route1Words.any((word) => word.contains(location) || location.contains(word));
-      bool inRoute2 = route2Words.any((word) => word.contains(location) || location.contains(word));
-      
-      if (inRoute1 && inRoute2) {
-        hasCommonGunturLocations = true;
-        break;
-      }
-    }
-    
-    // Enhanced matching: check if routes have similar destinations
-    bool hasSimilarDestination = false;
-    final commonDestinations = ['tenali', 'mangalagiri', 'namburu', 'amaravati', 'pedakakani'];
-    for (String destination in commonDestinations) {
-      bool destInRoute1 = normalizedRoute1.contains(destination);
-      bool destInRoute2 = normalizedRoute2.contains(destination);
-      
-      if (destInRoute1 && destInRoute2) {
-        hasSimilarDestination = true;
-        break;
-      }
-    }
-    
-    if (hasCommonGunturLocations || hasSimilarDestination) return true;
-    
-    // Fallback to original word matching for non-Guntur routes
-    int commonWords = 0;
-    for (String word in route1Words) {
-      if (route2Words.contains(word)) {
-        commonWords++;
-      }
-    }
-    
-    // Consider routes similar if they share at least 1 word
-    return commonWords > 0;
   }
 
   /// Get user profile by ID

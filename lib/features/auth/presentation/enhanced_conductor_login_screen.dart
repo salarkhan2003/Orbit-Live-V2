@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../main.dart';
-import '../../../core/localization_service.dart';
 import '../../../shared/orbit_live_colors.dart';
 import '../../../shared/orbit_live_text_styles.dart';
 import '../../../shared/orbit_live_animations.dart';

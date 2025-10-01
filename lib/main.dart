@@ -12,7 +12,7 @@ import 'features/auth/presentation/signup_page.dart';
 import 'features/auth/presentation/passenger/passenger_auth_screen.dart';
 import 'features/auth/presentation/driver/driver_auth_screen.dart';
 import 'features/auth/presentation/enhanced_role_selection_screen.dart';
-import 'features/auth/presentation/stylish_role_selection_screen.dart';
+import 'features/auth/presentation/improved_role_selection_screen.dart';
 import 'features/auth/presentation/enhanced_conductor_login_screen.dart';
 import 'features/auth/presentation/providers/role_selection_provider.dart';
 import 'features/travel_buddy/presentation/providers/travel_buddy_provider.dart';
@@ -96,7 +96,7 @@ class MyApp extends StatelessWidget {
               '/onboarding': (context) => OnboardingScreen(),
               '/login': (context) => LoginPage(),
               '/signup': (context) => SignupPage(),
-              '/role-selection': (context) => StylishRoleSelectionScreen(),
+              '/role-selection': (context) => ImprovedRoleSelectionScreen(),
               '/passenger-auth': (context) => PassengerAuthScreen(),
               '/driver-auth': (context) => DriverAuthScreen(),
               '/enhanced-conductor-login': (context) => EnhancedConductorLoginScreen(),
@@ -187,7 +187,7 @@ class _AuthGateState extends State<AuthGate> {
         }
 
         if (authProvider.user == null) {
-          return StylishRoleSelectionScreen();
+          return ImprovedRoleSelectionScreen();
         }
 
         if (authProvider.user?.role == null) {
@@ -200,7 +200,7 @@ class _AuthGateState extends State<AuthGate> {
           case UserRole.driver:
             return DriverDashboard();
           default:
-            return StylishRoleSelectionScreen();
+            return ImprovedRoleSelectionScreen();
         }
       },
     );

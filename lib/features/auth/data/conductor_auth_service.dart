@@ -1,5 +1,4 @@
 import '../domain/conductor_auth_data.dart';
-import '../domain/user_role.dart';
 import '../../../shared/utils/retry_mechanism.dart';
 import '../../../shared/utils/network_handler.dart';
 

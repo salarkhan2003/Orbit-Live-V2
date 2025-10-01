@@ -377,6 +377,9 @@ class PassengerNavigationDrawer extends StatelessWidget {
       {'code': 'bn', 'name': 'বাংলা'},
     ];
     
+    // Get current locale to highlight selected language
+    final currentLocale = localizationProvider.currentLocale;
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -388,17 +391,30 @@ class PassengerNavigationDrawer extends StatelessWidget {
               shrinkWrap: true,
               itemCount: languages.length,
               itemBuilder: (context, index) {
+                final isSelected = currentLocale.languageCode == languages[index]['code'];
                 return ListTile(
                   title: Text(languages[index]['name']!),
+                  trailing: isSelected 
+                    ? Icon(Icons.check, color: Colors.green) 
+                    : null,
+                  tileColor: isSelected 
+                    ? Colors.blue.withValues(alpha: 0.1) 
+                    : null,
                   onTap: () {
                     localizationProvider.setLocaleByLanguageCode(languages[index]['code']!);
                     Navigator.pop(context);
                     // Show a snackbar to indicate language change
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Language changed successfully!'),
+                        content: Text('Language changed to ${languages[index]['name']} successfully!'),
                         backgroundColor: Colors.green,
                       ),
+                    );
+                    // Rebuild the entire app to apply language changes to all screens
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => MyApp()), // Rebuild entire app
+                      (route) => false,
                     );
                   },
                 );

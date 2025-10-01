@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+
 
 /// Represents a travel buddy user profile
 class TravelBuddyProfile {

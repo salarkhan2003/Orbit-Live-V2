@@ -189,6 +189,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
                   }
                 },
                 activeColor: OrbitLiveColors.primaryTeal,
+                toggleable: true,
               ),
             ],
           ),

@@ -483,7 +483,8 @@ class _HomeScreen extends StatelessWidget {
         Text(
           'Quick Actions',
           style: OrbitLiveTextStyles.displaySmall.copyWith(
-            color: OrbitLiveColors.black,
+            fontWeight: FontWeight.bold,
+            color: OrbitLiveColors.darkGray,
           ),
         ),
         SizedBox(height: 15),
@@ -506,70 +507,60 @@ class _HomeScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Travel & Booking Section
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    'Travel & Booking',
-                    style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: OrbitLiveColors.darkGray,
-                    ),
-                  ),
-                ),
+                _buildSectionHeader('Travel & Booking'),
+                SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildQuickActionButton(
+                    _buildModernQuickActionButton(
                       context,
                       Icons.confirmation_number,
                       'Book Ticket',
+                      'Reserve your seat',
                       () => Navigator.pushNamed(context, '/ticket-booking'),
                       OrbitLiveColors.primaryTeal,
                     ),
-                    _buildQuickActionButton(
+                    _buildModernQuickActionButton(
                       context,
                       Icons.card_membership,
                       'My Passes',
+                      'View & manage passes',
                       () => Navigator.pushNamed(context, '/pass-application'),
                       Colors.purple,
                     ),
-                    _buildQuickActionButton(
+                    _buildModernQuickActionButton(
                       context,
                       Icons.people,
                       'Travel Buddy',
+                      'Find companions',
                       () => Navigator.pushNamed(context, '/travel-buddy'),
                       Colors.orange,
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 25),
                 // Safety & Support Section
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    'Safety & Support',
-                    style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: OrbitLiveColors.darkGray,
-                    ),
-                  ),
-                ),
+                _buildSectionHeader('Safety & Support'),
+                SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildQuickActionButton(
+                    _buildModernQuickActionButton(
                       context,
                       Icons.emergency,
                       'SOS',
+                      'Emergency help',
                       () => _triggerSOS(context),
                       Colors.red,
                     ),
-                    _buildQuickActionButton(
+                    _buildModernQuickActionButton(
                       context,
                       Icons.report_problem,
                       'Complaint',
+                      'Report issues',
                       () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -578,10 +569,11 @@ class _HomeScreen extends StatelessWidget {
                       ),
                       Colors.blue,
                     ),
-                    _buildQuickActionButton(
+                    _buildModernQuickActionButton(
                       context,
                       Icons.settings,
                       'Settings',
+                      'App preferences',
                       () => ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Settings feature coming soon')),
                       ),
@@ -597,47 +589,79 @@ class _HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActionButton(
+  Widget _buildSectionHeader(String title) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        title,
+        style: OrbitLiveTextStyles.bodyLarge.copyWith(
+          fontWeight: FontWeight.w600,
+          color: OrbitLiveColors.darkGray,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernQuickActionButton(
     BuildContext context,
     IconData icon,
     String label,
+    String subtitle,
     VoidCallback onPressed,
     Color color,
   ) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [color, color.withValues(alpha: 0.8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 100, // Increased width for better touch target
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color, color.withValues(alpha: 0.8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: Offset(0, 4),
             ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: Offset(0, 5),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
               ),
-            ],
-          ),
-          child: IconButton(
-            icon: Icon(icon, color: Colors.white, size: 30),
-            onPressed: onPressed,
-          ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            SizedBox(height: 10),
+            Text(
+              label,
+              style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: OrbitLiveTextStyles.caption.copyWith(
+                color: Colors.white70,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
-        SizedBox(height: 8),
-        Text(
-          label,
-          style: OrbitLiveTextStyles.bodyMedium.copyWith(
-            color: OrbitLiveColors.black,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
