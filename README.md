@@ -1,4 +1,4 @@
-# Public Transport Tracker - Flutter App
+# Public Transport Tracker - Android App
 
 A comprehensive Flutter application for public transport tracking and booking with role-based authentication using Clerk. The app supports two user roles: **Passenger** and **Driver/Conductor**, each with their own specialized dashboard and features.
 
