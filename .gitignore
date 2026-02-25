@@ -52,4 +52,18 @@ node_modules
 
 # Sensitive configuration files
 **/google-services.json
+**/google-services*.json
 **/GoogleService-Info.plist
+
+# JVM crash logs
+android/hs_err_*.log
+android/replay_*.log
+*.log
+
+# Build and IDE files
+*.iml
+android/local.properties
+android/.gradle/
+android/.kotlin/
+.idea/
+.vscode/settings.json
