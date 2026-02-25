@@ -106,6 +106,7 @@ class PaymentDetails {
   final String? upiId;
   final String? walletId;
   final double amount;
+  final String? transactionId;
 
   PaymentDetails({
     required this.method,
@@ -113,5 +114,6 @@ class PaymentDetails {
     this.upiId,
     this.walletId,
     required this.amount,
+    this.transactionId,
   });
 }

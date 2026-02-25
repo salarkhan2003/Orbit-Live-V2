@@ -15,15 +15,16 @@ class EnhancedMapScreen extends StatefulWidget {
   _EnhancedMapScreenState createState() => _EnhancedMapScreenState();
 }
 
-class _EnhancedMapScreenState extends State<EnhancedMapScreen> with TickerProviderStateMixin {
+class _EnhancedMapScreenState extends State<EnhancedMapScreen>
+    with TickerProviderStateMixin {
   late MapController _mapController;
-  late Timer _locationUpdateTimer;
   late Timer _busUpdateTimer;
+  late Timer _locationUpdateTimer;
   late AnimationController _pulseController;
   
-  bool _isLoading = true;
   bool _isNavigationMode = false;
   bool _locationPermissionGranted = false;
+  bool _isLoading = true;
   Map<String, dynamic>? _selectedBus;
   
   List<Marker> _busMarkers = [];

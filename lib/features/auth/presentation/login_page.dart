@@ -94,12 +94,25 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.signInWithGoogle();
+      
+      // After successful Google sign-in, navigate to role selection
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/role-selection');
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        _showErrorSnackBar('Google sign-in failed: ${e.toString().replaceAll('Exception:', '').trim()}');
+      }
     } catch (e) {
-      _showErrorSnackBar('Google sign-in failed: ${e.toString()}');
+      if (mounted) {
+        _showErrorSnackBar('Unexpected error during Google sign-in: ${e.toString()}');
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

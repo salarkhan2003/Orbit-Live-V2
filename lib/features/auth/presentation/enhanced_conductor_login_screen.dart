@@ -7,6 +7,7 @@ import '../../../shared/orbit_live_animations.dart';
 import '../../../shared/orbit_live_theme.dart';
 import '../../../shared/components/app_header.dart';
 import '../../../shared/utils/responsive_helper.dart';
+import '../../../core/localization_service.dart';
 import '../domain/user_role.dart';
 import '../domain/conductor_auth_data.dart';
 import '../data/conductor_auth_service.dart';
@@ -45,6 +46,9 @@ class _EnhancedConductorLoginScreenState extends State<EnhancedConductorLoginScr
   bool _obscurePassword = true;
   String? _errorMessage;
   
+  // Optimization: Add a flag to prevent multiple simultaneous requests
+  bool _isProcessing = false;
+  
   // Auth data model
   ConductorAuthData get _authData => ConductorAuthData(
     fullName: _isLogin ? null : _nameController.text,
@@ -74,49 +78,56 @@ class _EnhancedConductorLoginScreenState extends State<EnhancedConductorLoginScr
   }
   
   void _initializeAnimations() {
+    // Simplified animations for better performance
     _fadeController = AnimationController(
-      duration: OrbitLiveAnimations.standardDuration,
+      duration: const Duration(milliseconds: 200), // Further reduced
       vsync: this,
     );
     
     _slideController = AnimationController(
-      duration: OrbitLiveAnimations.mediumDuration,
+      duration: const Duration(milliseconds: 250), // Further reduced
       vsync: this,
     );
     
     _formController = AnimationController(
-      duration: OrbitLiveAnimations.longDuration,
+      duration: const Duration(milliseconds: 300), // Further reduced
       vsync: this,
     );
     
-    _fadeAnimation = OrbitLiveAnimations.createFadeAnimation(_fadeController);
-    _slideAnimation = OrbitLiveAnimations.createSlideAnimation(
-      _slideController,
-      begin: const Offset(0.0, 0.5),
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
-    _formAnimation = OrbitLiveAnimations.createScaleAnimation(
-      _formController,
-      begin: 0.9,
-      end: 1.0,
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.easeInOut),
+    );
+    
+    _formAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _formController, curve: Curves.easeInOut),
     );
   }
   
   void _startAnimations() {
-    Future.delayed(const Duration(milliseconds: 100), () {
+    // Reduced delays for faster startup
+    Future.delayed(const Duration(milliseconds: 50), () {
       if (mounted) _fadeController.forward();
     });
     
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) _slideController.forward();
     });
     
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) _formController.forward();
     });
   }
 
   Future<void> _authenticate() async {
-    if (!_formKey.currentState!.validate()) {
+    // Prevent multiple simultaneous requests
+    if (_isProcessing || !_formKey.currentState!.validate()) {
       return;
     }
 
@@ -132,6 +143,7 @@ class _EnhancedConductorLoginScreenState extends State<EnhancedConductorLoginScr
 
     setState(() {
       _isLoading = true;
+      _isProcessing = true; // Set processing flag
       _errorMessage = null;
     });
 
@@ -144,7 +156,7 @@ class _EnhancedConductorLoginScreenState extends State<EnhancedConductorLoginScr
         result = await ConductorAuthService.signup(_authData);
       }
       
-      if (result.isSuccess) {
+      if (result.isSuccess && mounted) {
         // Create authenticated user and set role
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         
@@ -168,24 +180,27 @@ class _EnhancedConductorLoginScreenState extends State<EnhancedConductorLoginScr
         throw ConductorAuthException(result.errorMessage ?? 'Authentication failed');
       }
     } catch (e) {
-      String errorMessage;
-      if (e is ConductorAuthException) {
-        errorMessage = e.message;
-      } else {
-        errorMessage = _isLogin 
-            ? 'Login failed. Please check your credentials.' 
-            : 'Signup failed. Please try again.';
+      if (mounted) {
+        String errorMessage;
+        if (e is ConductorAuthException) {
+          errorMessage = e.message;
+        } else {
+          errorMessage = _isLogin 
+              ? 'Login failed. Please check your credentials.' 
+              : 'Signup failed. Please try again.';
+        }
+        
+        setState(() {
+          _errorMessage = errorMessage;
+        });
+        
+        _showErrorSnackBar(errorMessage);
       }
-      
-      setState(() {
-        _errorMessage = errorMessage;
-      });
-      
-      _showErrorSnackBar(errorMessage);
     } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _isProcessing = false; // Reset processing flag
         });
       }
     }
@@ -241,6 +256,76 @@ class _EnhancedConductorLoginScreenState extends State<EnhancedConductorLoginScr
           onPressed: _authenticate,
         ),
       ),
+    );
+  }
+  
+  void _showLanguageSelector() {
+    final localizationProvider = Provider.of<LocalizationProvider>(context, listen: false);
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    LocalizationService.localizedValues[localizationProvider.currentLocale.languageCode]?['language'] ?? 'Language',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Divider(),
+              const SizedBox(height: 10),
+              
+              // Language options
+              ...LocalizationService.supportedLocales.map((locale) {
+                final languageName = LocalizationService.localizedValues[locale.languageCode]?['language'] ?? locale.languageCode;
+                final isSelected = localizationProvider.currentLocale.languageCode == locale.languageCode;
+                
+                return ListTile(
+                  title: Text(
+                    languageName!,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? OrbitLiveColors.primaryTeal : Colors.black87,
+                    ),
+                  ),
+                  trailing: isSelected 
+                    ? Icon(Icons.check, color: OrbitLiveColors.primaryTeal) 
+                    : null,
+                  onTap: () {
+                    // Simple locale change without complex state management
+                    localizationProvider.setLocale(locale);
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
+              
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
     );
   }
 

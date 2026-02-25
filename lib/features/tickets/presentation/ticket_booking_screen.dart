@@ -4,9 +4,11 @@ import '../../../shared/orbit_live_colors.dart';
 import '../../../shared/orbit_live_text_styles.dart';
 import '../../../shared/components/app_header.dart';
 import '../domain/ticket_models.dart';
+import '../domain/popular_routes.dart';
 import 'widgets/animated_ticket_card.dart';
 import 'widgets/payment_method_selector.dart';
 import 'providers/ticket_provider.dart';
+import '../../payments/presentation/payment_options_screen.dart';
 
 class TicketBookingScreen extends StatefulWidget {
   const TicketBookingScreen({super.key});
@@ -35,6 +37,9 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  // Add distance calculation
+  double _calculatedDistance = 0.0;
 
   @override
   void initState() {
@@ -302,45 +307,8 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
   }
 
   Widget _buildRouteCards() {
-    // Mock route data for Guntur
-    final routes = [
-      {
-        'id': '1',
-        'name': 'Guntur Central - Tenali',
-        'source': 'Guntur Central',
-        'destination': 'Tenali',
-        'duration': '25 mins',
-        'fare': '₹25',
-        'timings': ['6:00 AM', '7:30 AM', '9:00 AM', '11:30 AM', '2:00 PM', '4:30 PM', '6:00 PM', '8:30 PM']
-      },
-      {
-        'id': '2',
-        'name': 'RTC Bus Stand - Mangalagiri',
-        'source': 'RTC Bus Stand',
-        'destination': 'Mangalagiri',
-        'duration': '45 mins',
-        'fare': '₹40',
-        'timings': ['7:00 AM', '9:30 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM']
-      },
-      {
-        'id': '3',
-        'name': 'Lakshmipuram - Namburu',
-        'source': 'Lakshmipuram',
-        'destination': 'Namburu',
-        'duration': '35 mins',
-        'fare': '₹30',
-        'timings': ['6:30 AM', '8:00 AM', '10:30 AM', '1:00 PM', '3:30 PM', '6:30 PM', '9:30 PM']
-      },
-      {
-        'id': '4',
-        'name': 'Gurazala - Pedakakani',
-        'source': 'Gurazala',
-        'destination': 'Pedakakani',
-        'duration': '50 mins',
-        'fare': '₹35',
-        'timings': ['7:15 AM', '10:15 AM', '1:15 PM', '4:15 PM', '7:15 PM', '10:15 PM']
-      },
-    ];
+    // Get popular routes with RTC provided fixed fares
+    final routes = PopularRoutesData.getGunturRoutes();
     
     return Column(
       children: routes.map((route) {
@@ -374,7 +342,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
               child: const Icon(Icons.directions_bus, color: Colors.white),
             ),
             title: Text(
-              route['name'] as String,
+              route.name,
               style: OrbitLiveTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.w600,
                 color: OrbitLiveColors.black,
@@ -385,7 +353,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
               children: [
                 const SizedBox(height: 5),
                 Text(
-                  '${route['source'] as String} → ${route['destination'] as String}',
+                  '${route.source} → ${route.destination}',
                   style: OrbitLiveTextStyles.bodyMedium.copyWith(
                     color: OrbitLiveColors.darkGray,
                   ),
@@ -396,7 +364,16 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
                     Icon(Icons.access_time, size: 16, color: Colors.grey),
                     const SizedBox(width: 5),
                     Text(
-                      route['duration'] as String,
+                      '${route.estimatedDuration.inMinutes} mins',
+                      style: OrbitLiveTextStyles.bodySmall.copyWith(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Icon(Icons.linear_scale, size: 16, color: Colors.grey),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${route.distanceInKm.toStringAsFixed(1)} km',
                       style: OrbitLiveTextStyles.bodySmall.copyWith(
                         color: Colors.grey,
                       ),
@@ -405,35 +382,39 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
                     Icon(Icons.currency_rupee, size: 16, color: Colors.grey),
                     const SizedBox(width: 5),
                     Text(
-                      route['fare'] as String,
+                      '₹${route.fare.toStringAsFixed(0)}',
                       style: OrbitLiveTextStyles.bodySmall.copyWith(
                         color: Colors.grey,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'RTC Fixed Fare',
+                  style: OrbitLiveTextStyles.caption.copyWith(
+                    color: OrbitLiveColors.primaryTeal,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ],
             ),
             trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
             onTap: () {
-              _sourceController.text = route['source'] as String;
-              _destinationController.text = route['destination'] as String;
-              
-              // Create BusRoute object from route data
-              final routeFare = double.parse((route['fare'] as String).replaceAll('₹', ''));
-              final durationParts = (route['duration'] as String).split(' ');
-              final durationMinutes = int.parse(durationParts[0]);
+              _sourceController.text = route.source;
+              _destinationController.text = route.destination;
               
               setState(() {
                 _selectedRoute = BusRoute(
-                  id: route['id'] as String,
-                  name: route['name'] as String,
-                  source: route['source'] as String,
-                  destination: route['destination'] as String,
+                  id: route.id,
+                  name: route.name,
+                  source: route.source,
+                  destination: route.destination,
                   stops: [], // Empty for now
-                  estimatedDuration: Duration(minutes: durationMinutes),
-                  fare: routeFare,
-                  timings: List<String>.from(route['timings'] as List),
+                  estimatedDuration: route.estimatedDuration,
+                  fare: route.fare,
+                  timings: route.timings,
                 );
               });
               
@@ -1043,12 +1024,168 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
   Future<void> _processPayment() async {
     final ticketProvider = Provider.of<TicketProvider>(context, listen: false);
     
-    await ticketProvider.processPayment(
-      route: _selectedRoute!,
-      ticketType: _selectedTicketType!,
-      paymentDetails: _paymentDetails!,
-      source: _sourceController.text,
-      destination: _destinationController.text,
+    // For Cashfree payment method, show the payment options screen
+    if (_selectedPaymentMethod == PaymentMethod.upi) {
+      // Show payment options screen
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => PaymentOptionsScreen(
+            distanceInKm: _calculatedDistance,
+            source: _sourceController.text,
+            destination: _destinationController.text,
+            onPaymentSuccess: () {
+              // This will be called when payment is successful
+            },
+          ),
+        ),
+      );
+      
+      // If payment was successful, generate the ticket
+      if (result == true) {
+        await ticketProvider.processUpiPayment(
+          route: _selectedRoute!,
+          ticketType: _selectedTicketType!,
+          distanceInKm: _calculatedDistance,
+          source: _sourceController.text,
+          destination: _destinationController.text,
+        );
+      }
+    } else {
+      // For other payment methods, use the existing process
+      await ticketProvider.processPayment(
+        route: _selectedRoute!,
+        ticketType: _selectedTicketType!,
+        paymentDetails: _paymentDetails!,
+        source: _sourceController.text,
+        destination: _destinationController.text,
+        distanceInKm: _calculatedDistance,
+      );
+    }
+  }
+
+  // Add distance calculation method
+  Future<double> _calculateDistance(String source, String destination) async {
+    try {
+      // For demo purposes, we'll use a simple approximation
+      // In a real app, you would use Google Maps API or similar service
+      
+      // Mock distance calculation based on popular routes
+      final routes = PopularRoutesData.getGunturRoutes();
+      for (final route in routes) {
+        if ((route.source.toLowerCase().contains(source.toLowerCase()) && 
+             route.destination.toLowerCase().contains(destination.toLowerCase())) ||
+            (route.source.toLowerCase().contains(destination.toLowerCase()) && 
+             route.destination.toLowerCase().contains(source.toLowerCase()))) {
+          return route.distanceInKm;
+        }
+      }
+      
+      // If route not found in popular routes, return a default distance
+      return 10.0;
+    } catch (e) {
+      debugPrint('Error calculating distance: $e');
+      return 10.0; // Default distance
+    }
+  }
+
+  // Update the _proceedToPayment method
+  Future<void> _proceedToPayment() async {
+    if (_selectedRoute == null || _selectedTicketType == null) return;
+
+    // Calculate distance for custom routes or use route distance for popular routes
+    double distanceInKm;
+    if (_selectedRoute!.fare > 0) {
+      // Use fare from route to calculate distance (reverse calculation)
+      distanceInKm = (_selectedRoute!.fare - 5.0) / 2.0;
+    } else {
+      // Calculate distance for custom routes
+      distanceInKm = await _calculateDistance(
+        _sourceController.text, 
+        _destinationController.text
+      );
+    }
+
+    setState(() {
+      _calculatedDistance = distanceInKm;
+    });
+
+    // Show payment options screen with distance
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PaymentOptionsScreen(
+          distanceInKm: distanceInKm,
+          source: _sourceController.text,
+          destination: _destinationController.text,
+          onPaymentSuccess: () {
+            // Handle payment success
+            _showBookingSuccess();
+          },
+        ),
+      ),
+    );
+
+    if (result == true) {
+      // Payment was successful, generate ticket
+      await _generateTicket(distanceInKm);
+    }
+  }
+
+  // Update the _generateTicket method to use distance
+  Future<void> _generateTicket(double distanceInKm) async {
+    if (_selectedRoute == null || _selectedTicketType == null) return;
+
+    final ticketProvider = Provider.of<TicketProvider>(context, listen: false);
+    
+    try {
+      if (_selectedPaymentMethod == PaymentMethod.upi) {
+        await ticketProvider.processUpiPayment(
+          route: _selectedRoute!,
+          ticketType: _selectedTicketType!,
+          distanceInKm: distanceInKm,
+          source: _sourceController.text,
+          destination: _destinationController.text,
+        );
+      } else {
+        // Handle other payment methods
+        final paymentDetails = PaymentDetails(
+          method: _selectedPaymentMethod!,
+          amount: 5.0 + (distanceInKm * 2.0),
+          transactionId: 'TXN_${DateTime.now().millisecondsSinceEpoch}',
+        );
+        
+        await ticketProvider.processPayment(
+          route: _selectedRoute!,
+          ticketType: _selectedTicketType!,
+          paymentDetails: paymentDetails,
+          source: _sourceController.text,
+          destination: _destinationController.text,
+          distanceInKm: distanceInKm,
+        );
+      }
+      
+      // Move to confirmation step
+      _pageController.animateToPage(
+        3,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error processing payment: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Add the missing _showBookingSuccess method
+  void _showBookingSuccess() {
+    // Move to confirmation step
+    _pageController.animateToPage(
+      3,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
     );
   }
 }

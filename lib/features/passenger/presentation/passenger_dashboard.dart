@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -26,7 +25,6 @@ class _PassengerDashboardState extends State<PassengerDashboard>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _animationController;
-  late Animation<double> _animation;
 
   final List<Widget> _pages = [
     // Home screen with all features
@@ -43,10 +41,6 @@ class _PassengerDashboardState extends State<PassengerDashboard>
     _animationController = AnimationController(
       duration: Duration(milliseconds: 500),
       vsync: this,
-    );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
     );
   }
 
@@ -517,6 +511,14 @@ class _HomeScreen extends StatelessWidget {
                   children: [
                     _buildModernQuickActionButton(
                       context,
+                      Icons.location_on,
+                      'Live Track',
+                      'Real-time buses',
+                      () => Navigator.pushNamed(context, '/live-track-bus'),
+                      Colors.green,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
                       Icons.confirmation_number,
                       'Book Ticket',
                       'Reserve your seat',
@@ -531,6 +533,12 @@ class _HomeScreen extends StatelessWidget {
                       () => Navigator.pushNamed(context, '/pass-application'),
                       Colors.purple,
                     ),
+                  ],
+                ),
+                SizedBox(height: 15),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
                     _buildModernQuickActionButton(
                       context,
                       Icons.people,
@@ -538,6 +546,24 @@ class _HomeScreen extends StatelessWidget {
                       'Find companions',
                       () => Navigator.pushNamed(context, '/travel-buddy'),
                       Colors.orange,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.favorite,
+                      'Favorites',
+                      'Saved routes',
+                      () => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Favorites feature coming soon')),
+                      ),
+                      Colors.pink,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.history,
+                      'History',
+                      'Past trips',
+                      () => Navigator.pushNamed(context, '/all-tickets'),
+                      Colors.indigo,
                     ),
                   ],
                 ),
@@ -807,132 +833,166 @@ class _HomeScreen extends StatelessWidget {
   }
 
   Widget _buildLiveTrackingCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.2),
-            blurRadius: 15,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.location_on, color: Colors.green, size: 25),
-                ),
-                SizedBox(width: 12),
-                Text(
-                  'Live Tracking',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                SizedBox(width: 10),
-                Icon(Icons.network_cell, color: Colors.orange, size: 20),
-              ],
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/live-track-bus'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.2),
+              blurRadius: 15,
+              offset: Offset(0, 5),
             ),
-            SizedBox(height: 20),
-            // OpenStreetMap view
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: _buildOpenStreetMap(),
-              ),
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bus No: KA-01-A-1234',
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.location_on, color: Colors.green, size: 25),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Live Bus Tracking',
                       style: TextStyle(
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        color: Colors.grey[800],
                       ),
                     ),
-                    Text(
-                      'Route: Central Station to Airport',
-                      style: TextStyle(
-                        color: Colors.grey[600], 
-                        fontSize: 14,
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              // Map preview - tappable to go to full map
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Stack(
+                    children: [
+                      _buildOpenStreetMap(),
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.3),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.touch_app, color: OrbitLiveColors.primaryTeal, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Tap to track real buses on Ola Maps',
+                                style: TextStyle(
+                                  color: OrbitLiveColors.primaryTeal,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              // Info text
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Track live buses from Firebase with real GPS data on Ola Maps',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.blue[700],
+                        ),
                       ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.green, Colors.green.shade400],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'On Time',
-                    style: TextStyle(
-                      color: Colors.white, 
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: 0.6,
-              backgroundColor: Colors.grey[300],
-              color: Colors.green,
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Next stop: Mall Road', 
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                Text(
-                  'ETA: 5 min', 
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

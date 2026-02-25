@@ -6,6 +6,7 @@ import '../../../shared/components/app_header.dart';
 import '../domain/pass_models.dart';
 import 'widgets/animated_pass_card.dart';
 import 'providers/pass_provider.dart';
+import '../../payments/presentation/payment_options_screen.dart';
 
 class PassApplicationScreen extends StatefulWidget {
   const PassApplicationScreen({super.key});
@@ -17,7 +18,9 @@ class PassApplicationScreen extends StatefulWidget {
 class _PassApplicationScreenState extends State<PassApplicationScreen>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(); // Add form key
   int _currentStep = 0;
+  bool _isSubmitting = false; // Add isSubmitting variable
   
   // Form controllers
   final _nameController = TextEditingController();
@@ -350,104 +353,107 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
       position: _slideAnimation,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'User Details',
-              style: OrbitLiveTextStyles.cardTitle.copyWith(
-                fontSize: 24,
-                color: OrbitLiveColors.black,
+        child: Form(
+          key: _formKey, // Add form key
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'User Details',
+                style: OrbitLiveTextStyles.cardTitle.copyWith(
+                  fontSize: 24,
+                  color: OrbitLiveColors.black,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            
-            // Name field
-            _buildEnhancedTextField(
-              controller: _nameController,
-              label: 'Full Name',
-              hint: 'Enter your full name',
-              icon: Icons.person,
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Email field
-            _buildEnhancedTextField(
-              controller: _emailController,
-              label: 'Email Address',
-              hint: 'Enter your email address',
-              icon: Icons.email,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Phone field
-            _buildEnhancedTextField(
-              controller: _phoneController,
-              label: 'Phone Number',
-              hint: 'Enter your phone number',
-              icon: Icons.phone,
-              keyboardType: TextInputType.phone,
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Address field
-            _buildEnhancedTextField(
-              controller: _addressController,
-              label: 'Address',
-              hint: 'Enter your address',
-              icon: Icons.home,
-              maxLines: 3,
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Category selection
-            Text(
-              'Select Category',
-              style: OrbitLiveTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w600,
-                color: OrbitLiveColors.black,
+              const SizedBox(height: 24),
+              
+              // Name field
+              _buildEnhancedTextField(
+                controller: _nameController,
+                label: 'Full Name',
+                hint: 'Enter your full name',
+                icon: Icons.person,
               ),
-            ),
-            const SizedBox(height: 16),
-            
-            _buildCategoryCards(),
-            
-            const SizedBox(height: 30),
-            
-            // Continue button
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: _nameController.text.isNotEmpty &&
-                         _emailController.text.isNotEmpty &&
-                         _phoneController.text.isNotEmpty &&
-                         _addressController.text.isNotEmpty &&
-                         _selectedCategory != null
-                    ? () => _nextStep()
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: OrbitLiveColors.primaryTeal,
-                  foregroundColor: Colors.white,
-                  elevation: 5,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+              
+              const SizedBox(height: 20),
+              
+              // Email field
+              _buildEnhancedTextField(
+                controller: _emailController,
+                label: 'Email Address',
+                hint: 'Enter your email address',
+                icon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Phone field
+              _buildEnhancedTextField(
+                controller: _phoneController,
+                label: 'Phone Number',
+                hint: 'Enter your phone number',
+                icon: Icons.phone,
+                keyboardType: TextInputType.phone,
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Address field
+              _buildEnhancedTextField(
+                controller: _addressController,
+                label: 'Address',
+                hint: 'Enter your address',
+                icon: Icons.home,
+                maxLines: 3,
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Category selection
+              Text(
+                'Select Category',
+                style: OrbitLiveTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: OrbitLiveColors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              _buildCategoryCards(),
+              
+              const SizedBox(height: 30),
+              
+              // Continue button
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: _nameController.text.isNotEmpty &&
+                           _emailController.text.isNotEmpty &&
+                           _phoneController.text.isNotEmpty &&
+                           _addressController.text.isNotEmpty &&
+                           _selectedCategory != null
+                      ? () => _nextStep()
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: OrbitLiveColors.primaryTeal,
+                    foregroundColor: Colors.white,
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    disabledBackgroundColor: Colors.grey.shade300,
+                    disabledForegroundColor: Colors.grey.shade500,
                   ),
-                  disabledBackgroundColor: Colors.grey.shade300,
-                  disabledForegroundColor: Colors.grey.shade500,
-                ),
-                child: Text(
-                  'Continue',
-                  style: OrbitLiveTextStyles.buttonPrimary,
+                  child: Text(
+                    'Continue',
+                    style: OrbitLiveTextStyles.buttonPrimary,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1142,8 +1148,9 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
   }
 
   Future<void> _submitApplication() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final passProvider = Provider.of<PassProvider>(context, listen: false);
-    
     final application = PassApplication(
       id: 'APP${DateTime.now().millisecondsSinceEpoch}',
       applicantName: _nameController.text,
@@ -1155,10 +1162,63 @@ class _PassApplicationScreenState extends State<PassApplicationScreen>
       applicationDate: DateTime.now(),
       status: PassStatus.pending,
       documents: _uploadedDocuments,
-      studentId: _selectedCategory == PassCategory.student ? _studentIdController.text : null,
-      employeeId: _selectedCategory == PassCategory.employee ? _employeeIdController.text : null,
+      studentId: _studentIdController.text,
+      employeeId: _employeeIdController.text,
     );
-    
-    await passProvider.submitApplication(application);
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      // For pass applications, we'll use a fixed distance since it's not route-specific
+      final distanceInKm = 0.0;
+      
+      // Show payment options screen
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => PaymentOptionsScreen(
+            distanceInKm: distanceInKm,
+            source: 'Pass Application',
+            destination: '${_selectedPassType?.name} pass for ${_selectedCategory?.name}',
+            onPaymentSuccess: () {
+              // This will be called when payment is successful
+            },
+          ),
+        ),
+      );
+
+      // If payment was successful, submit the application
+      if (result == true) {
+        await passProvider.submitApplicationWithPayment(application);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Pass application submitted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Navigate back to all passes screen
+          Navigator.pushReplacementNamed(context, '/all-passes');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error submitting application: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 }

@@ -459,6 +459,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
           method: PaymentMethod.upi,
           upiId: _upiController.text,
           amount: widget.amount,
+          transactionId: 'UPI_${DateTime.now().millisecondsSinceEpoch}',
         );
         break;
       case PaymentMethod.wallet:
@@ -466,6 +467,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
           method: PaymentMethod.wallet,
           walletId: 'wallet_123',
           amount: widget.amount,
+          transactionId: 'WALLET_${DateTime.now().millisecondsSinceEpoch}',
         );
         break;
       case PaymentMethod.debitCard:
@@ -474,6 +476,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
           method: widget.selectedMethod!,
           cardNumber: _cardNumberController.text,
           amount: widget.amount,
+          transactionId: 'CARD_${DateTime.now().millisecondsSinceEpoch}',
         );
         break;
     }

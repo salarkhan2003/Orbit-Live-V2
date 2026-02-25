@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../main.dart';
+import '../../../core/localization_service.dart';
 import '../../../shared/orbit_live_colors.dart';
 import '../domain/user_role.dart';
 import '../../travel_buddy/presentation/providers/travel_buddy_provider.dart';
+import '../../../main.dart';
 
 /// Improved role selection screen with clean, modern UI/UX
 class ImprovedRoleSelectionScreen extends StatefulWidget {
@@ -31,44 +32,44 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
   void initState() {
     super.initState();
     
-    // Initialize animation controllers
+    // Simplified animation controllers for better performance
     _backgroundController = AnimationController(
-      duration: const Duration(seconds: 20),
+      duration: const Duration(seconds: 30), // Slower repeat for less CPU usage
       vsync: this,
     )..repeat();
     
     _cardController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 300), // Reduced duration
       vsync: this,
     );
     
     _buttonController = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3), // Slower repeat
       vsync: this,
     )..repeat(reverse: true);
     
-    // Create animations
+    // Simplified animations
     _backgroundAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _backgroundController, curve: Curves.linear),
     );
     
-    _cardScaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _cardController, curve: Curves.elasticOut),
+    _cardScaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _cardController, curve: Curves.easeOut),
     );
     
     _cardSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.3),
+      begin: const Offset(0.0, 0.2),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(parent: _cardController, curve: Curves.elasticOut),
+      CurvedAnimation(parent: _cardController, curve: Curves.easeOut),
     );
     
-    _buttonPulseAnimation = Tween<double>(begin: 1.0, end: 1.03).animate(
+    _buttonPulseAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
       CurvedAnimation(parent: _buttonController, curve: Curves.easeInOut),
     );
     
-    // Start animations with stagger
-    Future.delayed(const Duration(milliseconds: 200), () {
+    // Start animations with minimal stagger
+    Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
         _cardController.forward();
       }
@@ -125,7 +126,7 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
             Navigator.pushReplacementNamed(context, '/passenger-auth');
             break;
           case UserRole.driver:
-            Navigator.pushReplacementNamed(context, '/enhanced-conductor-login');
+            Navigator.pushReplacementNamed(context, '/driver-login');
           case null:
             break;
         }
@@ -229,6 +230,77 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
     Navigator.pushNamed(context, '/login');
   }
 
+  // Language selection method
+  void _showLanguageSelector() {
+    final localizationProvider = Provider.of<LocalizationProvider>(context, listen: false);
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    LocalizationService.localizedValues[localizationProvider.currentLocale.languageCode]?['language'] ?? 'Language',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Divider(),
+              const SizedBox(height: 10),
+              
+              // Language options
+              ...LocalizationService.supportedLocales.map((locale) {
+                final languageName = LocalizationService.localizedValues[locale.languageCode]?['language'] ?? locale.languageCode;
+                final isSelected = localizationProvider.currentLocale.languageCode == locale.languageCode;
+                
+                return ListTile(
+                  title: Text(
+                    languageName!,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? OrbitLiveColors.primaryTeal : Colors.black87,
+                    ),
+                  ),
+                  trailing: isSelected 
+                    ? Icon(Icons.check, color: OrbitLiveColors.primaryTeal) 
+                    : null,
+                  onTap: () {
+                    // Simple locale change without complex state management
+                    localizationProvider.setLocale(locale);
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
+              
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -253,20 +325,20 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
                   
                   // Main content
                   Padding(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Column(
                       children: [
-                        // Header
-                        _buildHeader(),
+                        // Header with language selector
+                        _buildHeaderWithLanguageSelector(),
                         
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 20),
                         
                         // Role cards
                         Expanded(
                           child: _buildRoleCards(),
                         ),
                         
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 16),
                         
                         // Action buttons
                         _buildActionButtons(),
@@ -317,30 +389,80 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
     );
   }
   
-  Widget _buildHeader() {
+  Widget _buildHeaderWithLanguageSelector() {
+    final localizationProvider = Provider.of<LocalizationProvider>(context);
+    
     return Column(
       children: [
+        // Top bar with language selector
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            GestureDetector(
+              onTap: _showLanguageSelector,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.language,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      LocalizationService.localizedValues[localizationProvider.currentLocale.languageCode]?['language'] ?? 'Language',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      size: 24,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: 20),
+        
         // App logo
         Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: Icon(
             Icons.directions_bus,
-            size: 64,
+            size: 56,
             color: Colors.white,
           ),
         ),
         
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         
         // Title
         Text(
           'Orbit Live',
           style: TextStyle(
-            fontSize: 36,
+            fontSize: 32,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 1.2,
@@ -354,13 +476,13 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
           ),
         ),
         
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         
         // Subtitle
         Text(
-          'Choose your role to get started',
+          LocalizationService.localizedValues[localizationProvider.currentLocale.languageCode]?['select_role'] ?? 'Choose your role to get started',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.w400,
             color: Colors.white70,
             letterSpacing: 0.5,
@@ -388,11 +510,11 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
               isSelected: _selectedRole == UserRole.passenger,
             ),
             
-            const SizedBox(height: 30),
+            const SizedBox(height: 16),
             
-            // Driver Card
+            // Conductor Card (changed from Driver Card)
             _buildRoleCard(
-              title: 'Driver',
+              title: 'Conductor',
               description: 'Manage trips, track passengers, and optimize your routes',
               icon: Icons.drive_eta,
               color: Color(0xFF2ecc71),
@@ -416,18 +538,18 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 140, // Reduced height to prevent overlay issues
+        height: 100,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.15),
           boxShadow: [
             BoxShadow(
               color: isSelected 
                   ? color.withValues(alpha: 0.4) 
                   : Colors.black.withValues(alpha: 0.2),
-              blurRadius: isSelected ? 20 : 12,
-              spreadRadius: isSelected ? 2 : 0,
-              offset: const Offset(0, 8),
+              blurRadius: isSelected ? 16 : 10,
+              spreadRadius: isSelected ? 1 : 0,
+              offset: const Offset(0, 6),
             ),
           ],
           border: Border.all(
@@ -439,19 +561,19 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
           children: [
             // Icon container
             Container(
-              width: 100, // Reduced width to prevent overlay issues
+              width: 70,
               decoration: BoxDecoration(
                 color: isSelected 
                     ? color.withValues(alpha: 0.2) 
                     : Colors.white.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  bottomLeft: Radius.circular(24),
+                  topLeft: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
                 ),
               ),
               child: Icon(
                 icon,
-                size: 40, // Reduced icon size to prevent overlay issues
+                size: 28,
                 color: isSelected ? color : Colors.white70,
               ),
             ),
@@ -459,7 +581,7 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
             // Content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16), // Reduced padding to prevent overlay issues
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -467,18 +589,18 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 20, // Reduced font size to prevent overlay issues
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: isSelected ? color : Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 6), // Reduced spacing to prevent overlay issues
+                    const SizedBox(height: 4),
                     Text(
                       description,
                       style: TextStyle(
-                        fontSize: 13, // Reduced font size to prevent overlay issues
+                        fontSize: 11,
                         color: isSelected ? Colors.black87 : Colors.white70,
-                        height: 1.3, // Reduced line height to prevent overlay issues
+                        height: 1.2,
                       ),
                     ),
                   ],
@@ -489,8 +611,8 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
             // Selection indicator
             if (isSelected)
               Container(
-                margin: const EdgeInsets.only(right: 16), // Reduced margin to prevent overlay issues
-                padding: const EdgeInsets.all(10), // Reduced padding to prevent overlay issues
+                margin: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: color,
                   shape: BoxShape.circle,
@@ -498,7 +620,7 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
                 child: const Icon(
                   Icons.check,
                   color: Colors.white,
-                  size: 20, // Reduced icon size to prevent overlay issues
+                  size: 16,
                 ),
               ),
           ],
@@ -515,15 +637,15 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
           scale: _buttonPulseAnimation,
           child: SizedBox(
             width: double.infinity,
-            height: 50, // Reduced height to prevent overlay issues
+            height: 45,
             child: ElevatedButton(
               onPressed: _selectedRole != null ? _submitRole : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Color(0xFF2575FC),
-                elevation: 10,
+                elevation: 8,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 disabledBackgroundColor: Colors.white30,
                 padding: EdgeInsets.zero,
@@ -533,7 +655,7 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
                   ? 'Continue as ${_selectedRole!.displayName}' 
                   : 'Select Role',
                 style: const TextStyle(
-                  fontSize: 15, // Reduced font size to prevent overlay issues
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -542,7 +664,7 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
           ),
         ),
         
-        const SizedBox(height: 16), // Reduced spacing to prevent overlay issues
+        const SizedBox(height: 12),
         
         // Secondary actions row
         Row(
@@ -553,9 +675,9 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
                 onPressed: _skipSelection,
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14), // Reduced padding to prevent overlay issues
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                     side: BorderSide(
                       color: Colors.white.withValues(alpha: 0.5),
                     ),
@@ -564,14 +686,14 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
                 child: const Text(
                   'Skip',
                   style: TextStyle(
-                    fontSize: 15, // Reduced font size to prevent overlay issues
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
             
-            const SizedBox(width: 12), // Reduced spacing to prevent overlay issues
+            const SizedBox(width: 10),
             
             // Sign Up button
             Expanded(
@@ -582,15 +704,15 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
                   side: BorderSide(
                     color: Colors.white.withValues(alpha: 0.5),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 14), // Reduced padding to prevent overlay issues
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: const Text(
                   'Sign Up',
                   style: TextStyle(
-                    fontSize: 15, // Reduced font size to prevent overlay issues
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -599,7 +721,7 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
           ],
         ),
         
-        const SizedBox(height: 12), // Reduced spacing to prevent overlay issues
+        const SizedBox(height: 10),
         
         // Login button
         SizedBox(
@@ -611,15 +733,15 @@ class _ImprovedRoleSelectionScreenState extends State<ImprovedRoleSelectionScree
               side: BorderSide(
                 color: Colors.white.withValues(alpha: 0.5),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 14), // Reduced padding to prevent overlay issues
+              padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
             ),
             child: const Text(
               'Login',
               style: TextStyle(
-                fontSize: 15, // Reduced font size to prevent overlay issues
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),

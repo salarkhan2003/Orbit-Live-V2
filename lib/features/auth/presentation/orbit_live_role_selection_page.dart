@@ -10,6 +10,7 @@ import '../../../shared/utils/responsive_helper.dart';
 import '../../../shared/components/role_card.dart';
 import '../../../shared/components/app_header.dart';
 import '../domain/user_role.dart';
+import '../../driver/presentation/vehicle_id_selection_screen.dart';
 
 /// Modern role selection page with Orbit Live branding and design
 class OrbitLiveRoleSelectionPage extends StatefulWidget {
@@ -403,6 +404,42 @@ class _OrbitLiveRoleSelectionPageState extends State<OrbitLiveRoleSelectionPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          // Guest Driver Button
+          SizedBox(
+            width: double.infinity,
+            height: ResponsiveHelper.getResponsiveButtonHeight(context),
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VehicleIdSelectionScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.directions_bus),
+              label: const Text(
+                'Start as Guest Driver',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: OrbitLiveColors.primaryBlue,
+                side: const BorderSide(
+                  color: OrbitLiveColors.primaryBlue,
+                  width: 2,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
           // Primary action button (Next/Continue)
           Semantics(
             label: _selectedRole != null 

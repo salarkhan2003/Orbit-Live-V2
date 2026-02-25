@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalizationService {
   static const List<Locale> supportedLocales = [
@@ -370,6 +371,29 @@ class LocalizationService {
   static String? getLocalizedValue(String key, Locale locale) {
     return localizedValues[locale.languageCode]?[key];
   }
+  
+  // Load saved language preference
+  static Future<Locale> loadSavedLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final languageCode = prefs.getString('language_code') ?? 'en';
+    final countryCode = prefs.getString('country_code') ?? 'US';
+    
+    // Validate the saved locale
+    final savedLocale = Locale(languageCode, countryCode);
+    if (supportedLocales.contains(savedLocale)) {
+      return savedLocale;
+    }
+    
+    // Return default locale if saved locale is not supported
+    return const Locale('en', 'US');
+  }
+  
+  // Save language preference
+  static Future<void> saveLocale(Locale locale) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language_code', locale.languageCode);
+    await prefs.setString('country_code', locale.countryCode ?? 'US');
+  }
 }
 
 // LocalizationProvider class for state management
@@ -378,10 +402,18 @@ class LocalizationProvider with ChangeNotifier {
 
   Locale get currentLocale => _currentLocale;
 
+  LocalizationProvider() {
+    _loadSavedLocale();
+  }
+
   void setLocale(Locale locale) {
-    if (LocalizationService.supportedLocales.contains(locale)) {
+    // Optimized locale setting with minimal processing
+    if (LocalizationService.supportedLocales.contains(locale) && _currentLocale != locale) {
       _currentLocale = locale;
       notifyListeners();
+      
+      // Asynchronous save to avoid blocking UI
+      _saveLocale(locale);
     }
   }
   
@@ -391,6 +423,30 @@ class LocalizationProvider with ChangeNotifier {
       orElse: () => const Locale('en', 'US'),
     );
     setLocale(locale);
+  }
+  
+  Future<void> _loadSavedLocale() async {
+    try {
+      final savedLocale = await LocalizationService.loadSavedLocale();
+      if (savedLocale != _currentLocale) {
+        _currentLocale = savedLocale;
+        // Only notify if there's an actual change
+        notifyListeners();
+      }
+    } catch (e) {
+      // If there's an error loading the saved locale, use the default
+      _currentLocale = const Locale('en', 'US');
+    }
+  }
+  
+  // Asynchronous save to avoid blocking UI during locale changes
+  Future<void> _saveLocale(Locale locale) async {
+    try {
+      await LocalizationService.saveLocale(locale);
+    } catch (e) {
+      // Silently handle save errors to prevent UI blocking
+      print('Failed to save locale: $e');
+    }
   }
 }
 

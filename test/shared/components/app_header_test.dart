@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:public_transport_tracker/shared/components/app_header.dart';
-import 'package:public_transport_tracker/shared/orbit_live_theme.dart';
+import 'package:public_transport_tracker/shared/orbit_live_text_styles.dart';
+import 'package:public_transport_tracker/shared/orbit_live_colors.dart';
 
 void main() {
   group('AppHeader', () {
