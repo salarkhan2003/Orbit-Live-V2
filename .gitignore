@@ -12,6 +12,11 @@
 .swiftpm/
 migrate_working_dir/
 
+# Node modules (not needed for Flutter)
+node_modules/
+package-lock.json
+package.json
+
 # IntelliJ related
 *.iml
 *.ipr
