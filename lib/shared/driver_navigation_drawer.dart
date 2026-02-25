@@ -4,7 +4,7 @@ import '../main.dart';
 import '../core/localization_service.dart';
 import '../core/connectivity_service.dart';
 import '../features/auth/domain/user_role.dart';
-import '../features/map/openstreet_map_screen.dart';
+import '../features/map/enhanced_map_screen.dart';
 import '../features/complaint/presentation/complaint_screen.dart';
 
 class DriverNavigationDrawer extends StatelessWidget {
@@ -15,7 +15,8 @@ class DriverNavigationDrawer extends StatelessWidget {
     return Consumer2<AuthProvider, ConnectivityService>(
       builder: (context, authProvider, connectivityService, child) {
         final user = authProvider.user;
-        if (user == null) return SizedBox.shrink();
+        // Remove the null check that was preventing the drawer from showing
+        // The drawer should show for both authenticated and guest users
 
         return Drawer(
           child: Column(
@@ -53,7 +54,7 @@ class DriverNavigationDrawer extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${user.firstName} ${user.lastName}',
+                                  user != null ? '${user.firstName} ${user.lastName}' : 'Guest Driver',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
@@ -61,7 +62,7 @@ class DriverNavigationDrawer extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  user.role?.displayName ?? '',
+                                  user?.role?.displayName ?? 'Driver',
                                   style: TextStyle(
                                     color: Colors.white70,
                                     fontSize: 16,
@@ -109,7 +110,7 @@ class DriverNavigationDrawer extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => OpenStreetMapScreen(userRole: 'driver'),
+                            builder: (context) => EnhancedMapScreen(userRole: 'driver'),
                           ),
                         );
                       },
@@ -219,16 +220,17 @@ class DriverNavigationDrawer extends StatelessWidget {
                         );
                       },
                     ),
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.logout,
-                      title: context.translate('logout'),
-                      onTap: () {
-                        Navigator.pop(context); // Close drawer
-                        _logout(context, authProvider);
-                      },
-                      isDestructive: true,
-                    ),
+                    if (user != null) // Only show logout for authenticated users
+                      _buildMenuItem(
+                        context,
+                        icon: Icons.logout,
+                        title: context.translate('logout'),
+                        onTap: () {
+                          Navigator.pop(context); // Close drawer
+                          _logout(context, authProvider);
+                        },
+                        isDestructive: true,
+                      ),
                   ],
                 ),
               ),
@@ -252,10 +254,10 @@ class DriverNavigationDrawer extends StatelessWidget {
         padding: EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isEmergency
-              ? Colors.red.withOpacity(0.1)
+              ? Colors.red.withValues(alpha: 0.1)
               : isDestructive
-                  ? Colors.red.withOpacity(0.1)
-                  : Colors.green.withOpacity(0.1),
+                  ? Colors.red.withValues(alpha: 0.1)
+                  : Colors.green.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -280,7 +282,7 @@ class DriverNavigationDrawer extends StatelessWidget {
 
   void _logout(BuildContext context, AuthProvider authProvider) async {
     await authProvider.logout();
-    Navigator.pushNamedAndRemoveUntil(context, '/role-selection-splash', (route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/role-selection', (route) => false);
   }
   
   void _showLanguageSelectionDialog(BuildContext context) {
@@ -299,6 +301,9 @@ class DriverNavigationDrawer extends StatelessWidget {
       {'code': 'bn', 'name': 'বাংলা'},
     ];
     
+    // Get current locale to highlight selected language
+    final currentLocale = localizationProvider.currentLocale;
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -310,11 +315,31 @@ class DriverNavigationDrawer extends StatelessWidget {
               shrinkWrap: true,
               itemCount: languages.length,
               itemBuilder: (context, index) {
+                final isSelected = currentLocale.languageCode == languages[index]['code'];
                 return ListTile(
                   title: Text(languages[index]['name']!),
+                  trailing: isSelected 
+                    ? Icon(Icons.check, color: Colors.green) 
+                    : null,
+                  tileColor: isSelected 
+                    ? Colors.blue.withValues(alpha: 0.1) 
+                    : null,
                   onTap: () {
                     localizationProvider.setLocaleByLanguageCode(languages[index]['code']!);
                     Navigator.pop(context);
+                    // Show a snackbar to indicate language change
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Language changed to ${languages[index]['name']} successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    // Rebuild the entire app to apply language changes to all screens
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => MyApp()), // Rebuild entire app
+                      (route) => false,
+                    );
                   },
                 );
               },

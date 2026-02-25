@@ -18,7 +18,7 @@ extension UserRoleExtension on UserRole {
       case UserRole.passenger:
         return 'Passenger';
       case UserRole.driver:
-        return 'Driver/Conductor';
+        return 'Conductor'; // Changed from 'Driver/Conductor' to 'Conductor'
     }
   }
 

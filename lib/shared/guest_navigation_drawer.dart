@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
+import '../core/localization_service.dart';
 
 class GuestNavigationDrawer extends StatelessWidget {
   const GuestNavigationDrawer({super.key});
@@ -41,7 +42,7 @@ class GuestNavigationDrawer extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     child: Icon(
                       Icons.person_outline,
                       size: 30,
@@ -81,7 +82,7 @@ class GuestNavigationDrawer extends StatelessWidget {
               },
             ),
             
-            Divider(color: Colors.white.withOpacity(0.3)),
+            Divider(color: Colors.white.withValues(alpha: 0.3)),
             
             // View Routes
             ListTile(
@@ -124,7 +125,7 @@ class GuestNavigationDrawer extends StatelessWidget {
               },
             ),
             
-            Divider(color: Colors.white.withOpacity(0.3)),
+            Divider(color: Colors.white.withValues(alpha: 0.3)),
             
             // Create Account
             ListTile(
@@ -152,7 +153,7 @@ class GuestNavigationDrawer extends StatelessWidget {
               },
             ),
             
-            Divider(color: Colors.white.withOpacity(0.3)),
+            Divider(color: Colors.white.withValues(alpha: 0.3)),
             
             // About
             ListTile(
@@ -164,6 +165,19 @@ class GuestNavigationDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 _showAboutDialog(context);
+              },
+            ),
+            
+            // Language Selection
+            ListTile(
+              leading: Icon(Icons.language, color: Colors.white),
+              title: Text(
+                'Language',
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showLanguageSelectionDialog(context);
               },
             ),
             
@@ -234,6 +248,48 @@ class GuestNavigationDrawer extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+  
+  void _showLanguageSelectionDialog(BuildContext context) {
+    final localizationProvider = Provider.of<LocalizationProvider>(context, listen: false);
+    
+    // Use fixed language names instead of translating them
+    List<Map<String, String>> languages = [
+      {'code': 'en', 'name': 'English'},
+      {'code': 'pa', 'name': 'ਪੰਜਾਬੀ'},
+      {'code': 'hi', 'name': 'हिंदी'},
+      {'code': 'te', 'name': 'తెలుగు'},
+      {'code': 'ta', 'name': 'தமிழ்'},
+      {'code': 'ml', 'name': 'മലയാളം'},
+      {'code': 'kn', 'name': 'ಕನ್ನಡ'},
+      {'code': 'mr', 'name': 'मराठी'},
+      {'code': 'bn', 'name': 'বাংলা'},
+    ];
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select Language'),
+          content: Container(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: languages.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(languages[index]['name']!),
+                  onTap: () {
+                    localizationProvider.setLocaleByLanguageCode(languages[index]['code']!);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

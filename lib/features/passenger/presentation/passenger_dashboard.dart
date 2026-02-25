@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'dart:ui' as ui;
 import '../../../main.dart';
 import '../../../core/connectivity_service.dart';
-import '../../../core/localization_service.dart';
 import '../../auth/domain/user_role.dart';
-import '../../map/openstreet_map_screen.dart';
+import '../../map/enhanced_map_screen.dart';
 import '../../../shared/passenger_navigation_drawer.dart';
+import '../../travel_buddy/domain/travel_buddy_models.dart';
+import '../../travel_buddy/presentation/providers/travel_buddy_provider.dart';
+import '../../../shared/orbit_live_colors.dart';
+import '../../../shared/orbit_live_text_styles.dart';
+import '../../complaint/presentation/complaint_screen.dart';
 
 class PassengerDashboard extends StatefulWidget {
   const PassengerDashboard({super.key});
@@ -18,13 +25,12 @@ class _PassengerDashboardState extends State<PassengerDashboard>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _animationController;
-  late Animation<double> _animation;
 
   final List<Widget> _pages = [
     // Home screen with all features
     _HomeScreen(),
     // Map screen
-    OpenStreetMapScreen(userRole: 'passenger'),
+    EnhancedMapScreen(userRole: 'passenger'),
     // Explore screen
     _ExploreScreen(),
   ];
@@ -35,10 +41,6 @@ class _PassengerDashboardState extends State<PassengerDashboard>
     _animationController = AnimationController(
       duration: Duration(milliseconds: 500),
       vsync: this,
-    );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
     );
   }
 
@@ -85,7 +87,7 @@ class _PassengerDashboardState extends State<PassengerDashboard>
           ),
         ],
         elevation: 5,
-        shadowColor: Colors.blue.withOpacity(0.3),
+        shadowColor: Colors.blue.withValues(alpha: 0.3),
       ),
       drawer: PassengerNavigationDrawer(),
       body: AnimatedSwitcher(
@@ -96,7 +98,7 @@ class _PassengerDashboardState extends State<PassengerDashboard>
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               spreadRadius: 1,
             ),
@@ -228,7 +230,7 @@ class _PassengerDashboardState extends State<PassengerDashboard>
       leading: Container(
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: color),
@@ -277,14 +279,14 @@ class _HomeScreen extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue, Colors.blue.shade400],
+          colors: OrbitLiveColors.blueGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.blue.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -297,7 +299,7 @@ class _HomeScreen extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -313,10 +315,8 @@ class _HomeScreen extends StatelessWidget {
                 children: [
                   Text(
                     'Welcome Back!',
-                    style: TextStyle(
+                    style: OrbitLiveTextStyles.displaySmall.copyWith(
                       color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   SizedBox(height: 5),
@@ -326,9 +326,8 @@ class _HomeScreen extends StatelessWidget {
                         connectivityService.shouldUseLowBandwidthMode()
                             ? 'Optimized for low bandwidth'
                             : 'Track your buses and manage your travels',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 15,
+                        style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                          color: Colors.white, // Keep white for contrast on blue gradient
                         ),
                       );
                     },
@@ -345,11 +344,15 @@ class _HomeScreen extends StatelessWidget {
   Widget _buildRouteSearchCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [Colors.white, Colors.grey.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -365,18 +368,18 @@ class _HomeScreen extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    gradient: LinearGradient(
+                      colors: OrbitLiveColors.tealGradient,
+                    ),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.search, color: Colors.blue, size: 25),
+                  child: Icon(Icons.search, color: Colors.white, size: 25),
                 ),
                 SizedBox(width: 12),
                 Text(
                   'Find Your Bus',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                  style: OrbitLiveTextStyles.displaySmall.copyWith(
+                    color: OrbitLiveColors.black,
                   ),
                 ),
               ],
@@ -391,11 +394,17 @@ class _HomeScreen extends StatelessWidget {
                 decoration: InputDecoration(
                   labelText: 'From',
                   hintText: 'Enter starting point',
-                  prefixIcon: Icon(Icons.location_on, color: Colors.blue),
+                  prefixIcon: Icon(Icons.location_on, color: OrbitLiveColors.primaryTeal),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 15,
+                  ),
+                  labelStyle: TextStyle(
+                    color: OrbitLiveColors.black, // Ensure visibility
+                  ),
+                  hintStyle: TextStyle(
+                    color: Colors.grey, // Ensure visibility
                   ),
                 ),
               ),
@@ -410,11 +419,17 @@ class _HomeScreen extends StatelessWidget {
                 decoration: InputDecoration(
                   labelText: 'To',
                   hintText: 'Enter destination',
-                  prefixIcon: Icon(Icons.location_on, color: Colors.blue),
+                  prefixIcon: Icon(Icons.location_on, color: OrbitLiveColors.primaryTeal),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 15,
+                  ),
+                  labelStyle: TextStyle(
+                    color: OrbitLiveColors.black, // Ensure visibility
+                  ),
+                  hintStyle: TextStyle(
+                    color: Colors.grey, // Ensure visibility
                   ),
                 ),
               ),
@@ -422,32 +437,30 @@ class _HomeScreen extends StatelessWidget {
             SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
+              height: 50,
+              child: ElevatedButton(
                 onPressed: () {
                   // Navigate to map screen
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => OpenStreetMapScreen(userRole: 'passenger'),
+                      builder: (context) => EnhancedMapScreen(userRole: 'passenger'),
                     ),
                   );
                 },
-                icon: Icon(Icons.directions_bus, size: 22),
-                label: Text(
-                  'Search Buses',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: OrbitLiveColors.primaryTeal,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 18),
+                  elevation: 5,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  elevation: 5,
+                ),
+                child: Text(
+                  'Search Buses',
+                  style: OrbitLiveTextStyles.buttonPrimary.copyWith(
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -463,148 +476,327 @@ class _HomeScreen extends StatelessWidget {
       children: [
         Text(
           'Quick Actions',
-          style: TextStyle(
-            fontSize: 20,
+          style: OrbitLiveTextStyles.displaySmall.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: OrbitLiveColors.darkGray,
           ),
         ),
         SizedBox(height: 15),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                context,
-                title: context.translate('live_tracking'),
-                icon: Icons.map,
-                color: Colors.green,
-                onTap: () => _navigateToLiveTracking(context),
-              ),
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Colors.grey.shade50],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            SizedBox(width: 15),
-            Expanded(
-              child: _buildActionCard(
-                context,
-                title: context.translate('book_ticket'),
-                icon: Icons.confirmation_number,
-                color: Colors.orange,
-                onTap: () => _navigateToBookTicket(context),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: 0.2),
+                blurRadius: 15,
+                offset: Offset(0, 5),
               ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Travel & Booking Section
+                _buildSectionHeader('Travel & Booking'),
+                SizedBox(height: 15),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.location_on,
+                      'Live Track',
+                      'Real-time buses',
+                      () => Navigator.pushNamed(context, '/live-track-bus'),
+                      Colors.green,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.confirmation_number,
+                      'Book Ticket',
+                      'Reserve your seat',
+                      () => Navigator.pushNamed(context, '/ticket-booking'),
+                      OrbitLiveColors.primaryTeal,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.card_membership,
+                      'My Passes',
+                      'View & manage passes',
+                      () => Navigator.pushNamed(context, '/pass-application'),
+                      Colors.purple,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 15),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.people,
+                      'Travel Buddy',
+                      'Find companions',
+                      () => Navigator.pushNamed(context, '/travel-buddy'),
+                      Colors.orange,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.favorite,
+                      'Favorites',
+                      'Saved routes',
+                      () => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Favorites feature coming soon')),
+                      ),
+                      Colors.pink,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.history,
+                      'History',
+                      'Past trips',
+                      () => Navigator.pushNamed(context, '/all-tickets'),
+                      Colors.indigo,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 25),
+                // Safety & Support Section
+                _buildSectionHeader('Safety & Support'),
+                SizedBox(height: 15),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.emergency,
+                      'SOS',
+                      'Emergency help',
+                      () => _triggerSOS(context),
+                      Colors.red,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.report_problem,
+                      'Complaint',
+                      'Report issues',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ComplaintScreen(userRole: UserRole.passenger),
+                        ),
+                      ),
+                      Colors.blue,
+                    ),
+                    _buildModernQuickActionButton(
+                      context,
+                      Icons.settings,
+                      'Settings',
+                      'App preferences',
+                      () => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Settings feature coming soon')),
+                      ),
+                      Colors.grey,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-        SizedBox(height: 15),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                context,
-                title: context.translate('my_passes'),
-                icon: Icons.card_membership,
-                color: Colors.purple,
-                onTap: () => _navigateToMyPasses(context),
-              ),
-            ),
-            SizedBox(width: 15),
-            Expanded(
-              child: _buildActionCard(
-                context,
-                title: context.translate('sos'),
-                icon: Icons.emergency,
-                color: Colors.red,
-                onTap: () => _navigateToSOS(context),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildActionCard(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildSectionHeader(String title) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        title,
+        style: OrbitLiveTextStyles.bodyLarge.copyWith(
+          fontWeight: FontWeight.w600,
+          color: OrbitLiveColors.darkGray,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernQuickActionButton(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String subtitle,
+    VoidCallback onPressed,
+    Color color,
+  ) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: onPressed,
       child: Container(
+        width: 100, // Increased width for better touch target
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.white, Colors.grey.shade50],
+            colors: [color, color.withValues(alpha: 0.8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: color.withValues(alpha: 0.3),
               blurRadius: 10,
-              offset: Offset(0, 5),
+              offset: Offset(0, 4),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 35,
-                  color: color,
-                ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
               ),
-              SizedBox(height: 12),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            SizedBox(height: 10),
+            Text(
+              label,
+              style: OrbitLiveTextStyles.bodyMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: OrbitLiveTextStyles.caption.copyWith(
+                color: Colors.white70,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _navigateToLiveTracking(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OpenStreetMapScreen(userRole: 'passenger'),
-      ),
+  void _triggerSOS(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.emergency, color: Colors.red),
+              SizedBox(width: 10),
+              Text('Emergency Assistance'),
+            ],
+          ),
+          content: Text(
+            'Are you in immediate danger? This will send your location to emergency services and your travel buddy (if connected).',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _sendSOSAlert(context);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: Text('Send Emergency Alert', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  void _navigateToBookTicket(BuildContext context) {
-    // Show actual ticket booking
-    _showFeatureDialog(context, 'Book Ticket', 'Ticket booking feature is now available.');
+  Future<void> _sendSOSAlert(BuildContext context) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Sending emergency alert...'),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      // Get current location (in a real app, this would be actual GPS location)
+      // For demo purposes, we'll use a mock location
+      final location = TravelBuddyLocation(
+        latitude: 16.3067, // Guntur latitude
+        longitude: 80.4365, // Guntur longitude
+        timestamp: DateTime.now(),
+      );
+
+      // Send SOS alert through travel buddy provider
+      final travelBuddyProvider = Provider.of<TravelBuddyProvider>(
+        context,
+        listen: false,
+      );
+      
+      final success = await travelBuddyProvider.sendSOSAlert(
+        location: location,
+        message: 'Emergency SOS from passenger at Guntur location',
+      );
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Emergency alert sent successfully! Help is on the way.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send emergency alert. Please try again.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error sending emergency alert: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
-  void _navigateToMyPasses(BuildContext context) {
-    // Show actual passes management
-    _showFeatureDialog(context, 'My Passes', 'Pass management feature is now available.');
-  }
-
-  void _navigateToSOS(BuildContext context) {
-    // Show actual emergency assistance
-    _showFeatureDialog(context, 'SOS', 'Emergency assistance feature is now available.');
+  void _navigateToTravelBuddy(BuildContext context) {
+    Navigator.pushNamed(context, '/travel-buddy');
   }
 
   void _showFeatureDialog(BuildContext context, String title, String message) {
@@ -641,212 +833,266 @@ class _HomeScreen extends StatelessWidget {
   }
 
   Widget _buildLiveTrackingCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 15,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.location_on, color: Colors.green, size: 25),
-                ),
-                SizedBox(width: 12),
-                Text(
-                  'Live Tracking',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                SizedBox(width: 10),
-                Icon(Icons.network_cell, color: Colors.orange, size: 20),
-              ],
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/live-track-bus'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.2),
+              blurRadius: 15,
+              offset: Offset(0, 5),
             ),
-            SizedBox(height: 20),
-            // Simplified map view
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: _buildSimplifiedMap(),
-              ),
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bus No: KA-01-A-1234',
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.location_on, color: Colors.green, size: 25),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Live Bus Tracking',
                       style: TextStyle(
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        color: Colors.grey[800],
                       ),
                     ),
-                    Text(
-                      'Route: Central Station to Airport',
-                      style: TextStyle(
-                        color: Colors.grey[600], 
-                        fontSize: 14,
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              // Map preview - tappable to go to full map
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Stack(
+                    children: [
+                      _buildOpenStreetMap(),
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.3),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.touch_app, color: OrbitLiveColors.primaryTeal, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Tap to track real buses on Ola Maps',
+                                style: TextStyle(
+                                  color: OrbitLiveColors.primaryTeal,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              // Info text
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Track live buses from Firebase with real GPS data on Ola Maps',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.blue[700],
+                        ),
                       ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.green, Colors.green.shade400],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'On Time',
-                    style: TextStyle(
-                      color: Colors.white, 
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: 0.6,
-              backgroundColor: Colors.grey[300],
-              color: Colors.green,
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Next stop: Mall Road', 
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                Text(
-                  'ETA: 5 min', 
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSimplifiedMap() {
-    return Stack(
+  Widget _buildOpenStreetMap() {
+    return FlutterMap(
+      options: MapOptions(
+        initialCenter: LatLng(16.3067, 80.4365), // Guntur coordinates
+        initialZoom: 13.0,
+        interactionOptions: InteractionOptions(flags: InteractiveFlag.none), // Disable interaction for simplicity
+      ),
       children: [
-        // Map background
-        Container(
-          color: Colors.blue[50],
-          child: Center(
-            child: Icon(
-              Icons.map,
-              size: 50,
-              color: Colors.blue[300],
-            ),
-          ),
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.orbit.live',
         ),
-        // Route line
-        CustomPaint(
-          painter: RoutePainter(),
-          size: Size(double.infinity, double.infinity),
-        ),
-        // Bus markers
-        Positioned(
-          left: 50,
-          top: 80,
-          child: Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+        MarkerLayer(
+          markers: [
+            Marker(
+              point: LatLng(16.3067, 80.4365), // Guntur Central
+              width: 80,
+              height: 80,
+              child: Icon(
+                Icons.location_on,
+                color: Colors.blue,
+                size: 40,
+              ),
             ),
-            child: Center(
-              child: Text(
-                '12',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            Marker(
+              point: LatLng(16.2987, 80.4425), // Tenali
+              width: 80,
+              height: 80,
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: Center(
+                  child: Text(
+                    '12',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-        Positioned(
-          right: 70,
-          top: 120,
-          child: Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: Center(
-              child: Text(
-                '34',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            Marker(
+              point: LatLng(16.2927, 80.4505), // Mangalagiri
+              width: 80,
+              height: 80,
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: Center(
+                  child: Text(
+                    '34',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
-        // User location
-        Positioned(
-          left: 100,
-          bottom: 60,
-          child: Icon(
-            Icons.location_on,
-            color: Colors.blue,
-            size: 30,
-          ),
+        PolylineLayer(
+          polylines: [
+            Polyline(
+              points: [
+                LatLng(16.3067, 80.4365), // Guntur Central
+                LatLng(16.3000, 80.4400),  // Mid point
+                LatLng(16.2987, 80.4425),  // Tenali
+              ],
+              strokeWidth: 4.0,
+              color: Colors.blue.withValues(alpha: 0.7),
+            ),
+            Polyline(
+              points: [
+                LatLng(16.3067, 80.4365), // Guntur Central
+                LatLng(16.2997, 80.4435), // Mid point
+                LatLng(16.2927, 80.4505), // Mangalagiri
+              ],
+              strokeWidth: 4.0,
+              color: Colors.green.withValues(alpha: 0.7),
+            ),
+          ],
         ),
       ],
     );
@@ -859,7 +1105,7 @@ class _HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -875,7 +1121,7 @@ class _HomeScreen extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.confirmation_number, color: Colors.orange, size: 25),
@@ -914,7 +1160,7 @@ class _HomeScreen extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
+                          color: Colors.orange.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(Icons.confirmation_number, color: Colors.orange),
@@ -958,7 +1204,7 @@ class _HomeScreen extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () {
-                  _showFeatureDialog(context, 'All Tickets', 'View all tickets feature is now available.');
+                  Navigator.pushNamed(context, '/all-tickets');
                 },
                 child: Text(
                   'View All Tickets',
@@ -989,7 +1235,7 @@ class _HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -1005,7 +1251,7 @@ class _HomeScreen extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.1),
+                    color: Colors.purple.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.card_membership, color: Colors.purple, size: 25),
@@ -1110,7 +1356,7 @@ class _HomeScreen extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () {
-                  _showFeatureDialog(context, 'Manage Passes', 'Pass management feature is now available.');
+                  Navigator.pushNamed(context, '/all-passes');
                 },
                 child: Text(
                   'Manage Passes',
@@ -1221,7 +1467,7 @@ class _ExploreScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: Offset(0, 5),
             ),
@@ -1232,7 +1478,7 @@ class _ExploreScreen extends StatelessWidget {
             padding: EdgeInsets.all(15),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
+                colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.2)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -1298,11 +1544,11 @@ class RoutePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue.withOpacity(0.7)
+      ..color = Colors.blue.withValues(alpha: 0.7)
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
 
-    final path = Path()
+    final path = ui.Path()
       ..moveTo(20, size.height - 40)
       ..quadraticBezierTo(
         size.width * 0.25,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../../onboarding/presentation/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -83,27 +84,29 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startAnimations() async {
-    // Start scale animation
-    await _scaleController.forward();
-
-    // Start fade animation
+    // Start all animations simultaneously for faster loading
+    _scaleController.forward();
     _fadeController.forward();
+    
+    // Start bus movement and rotation with minimal delay
+    Future.delayed(Duration(milliseconds: 200), () {
+      _busController.forward();
+    });
+    
+    Future.delayed(Duration(milliseconds: 300), () {
+      _rotationController.repeat();
+    });
 
-    // Start bus movement animation
-    await Future.delayed(Duration(milliseconds: 500));
-    _busController.forward();
-
-    // Start rotation animation
-    await Future.delayed(Duration(milliseconds: 300));
-    _rotationController.repeat();
-
-    // Navigate to role selection after animations
-    await Future.delayed(Duration(seconds: 4));
+    // Reduced total time for faster app startup
+    await Future.delayed(Duration(seconds: 2));
     _navigateToNext();
   }
 
   void _navigateToNext() {
-    Navigator.pushReplacementNamed(context, '/role-selection-splash');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => OnboardingScreen()),
+    );
   }
 
   @override
@@ -159,11 +162,11 @@ class _SplashScreenState extends State<SplashScreen>
                                     child: Container(
                                       padding: EdgeInsets.all(24),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
+                                        color: Colors.white.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(30),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.white.withOpacity(0.2),
+                                            color: Colors.white.withValues(alpha: 0.2),
                                             blurRadius: 20,
                                             spreadRadius: 5,
                                           ),
@@ -290,9 +293,9 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 60 + (index * 10),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.03),
+                  color: Colors.white.withValues(alpha: 0.03),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),

@@ -1,239 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../features/auth/domain/user_role.dart';
-
-class AuthService {
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
-  static final GoogleSignIn _googleSignIn = GoogleSignIn();
-  static SharedPreferences? _prefs;
-
-  static Future<void> init() async {
-    try {
-      // Initialize Firebase with your project configuration
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: "AIzaSyAAiH5whjhfoGyw83uwji0Con8nojaXBFA",
-          authDomain: "orbit-live.firebaseapp.com",
-          projectId: "orbit-live",
-          storageBucket: "orbit-live.appspot.com",
-          messagingSenderId: "563483124508",
-          appId: "1:563483124508:android:9e3f2b3d1e732fe25050d9",
-          measurementId: "G-XXXXXXXXXX",
-        ),
-      );
-      _prefs = await SharedPreferences.getInstance();
-      print('✅ Firebase initialized successfully with project: orbit-live');
-    } catch (e) {
-      print('❌ Firebase initialization failed: $e');
-      // Fallback to SharedPreferences only
-      _prefs = await SharedPreferences.getInstance();
-    }
-  }
-
-  static Future<AuthUser?> getCurrentUser() async {
-    try {
-      final firebaseUser = _auth.currentUser;
-      if (firebaseUser != null) {
-        final roleString = _prefs?.getString('user_role_${firebaseUser.uid}');
-        UserRole? role;
-        if (roleString == 'passenger') {
-          role = UserRole.passenger;
-        } else if (roleString == 'driver') {
-          role = UserRole.driver;
-        }
-
-        return AuthUser(
-          id: firebaseUser.uid,
-          email: firebaseUser.email ?? '',
-          firstName: firebaseUser.displayName?.split(' ').first ?? 'User',
-          lastName: firebaseUser.displayName?.split(' ').skip(1).join(' ') ?? '',
-          phoneNumber: firebaseUser.phoneNumber ?? '',
-          role: role,
-        );
-      }
-
-      // Fallback to local storage for development
-      final email = _prefs?.getString('user_email');
-      final roleString = _prefs?.getString('user_role');
-
-      if (email == null) return null;
-
-      UserRole? role;
-      if (roleString == 'passenger') {
-        role = UserRole.passenger;
-      } else if (roleString == 'driver') {
-        role = UserRole.driver;
-      }
-
-      return AuthUser(
-        id: 'local_${email.hashCode}',
-        email: email,
-        firstName: 'Test',
-        lastName: 'User',
-        phoneNumber: '+1234567890',
-        role: role,
-      );
-    } catch (e) {
-      print('Error getting current user: $e');
-      return null;
-    }
-  }
-
-  static Future<AuthUser?> signIn(String email, String password) async {
-    try {
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      if (credential.user != null) {
-        return await getCurrentUser();
-      }
-      throw Exception('Sign in failed');
-    } catch (e) {
-      print('Firebase sign in error: $e');
-
-      // Fallback to mock authentication for development
-      if (email.isNotEmpty && password.length >= 6) {
-        await _prefs?.setString('user_email', email);
-        return AuthUser(
-          id: 'local_${email.hashCode}',
-          email: email,
-          firstName: 'Test',
-          lastName: 'User',
-          phoneNumber: '+1234567890',
-          role: null,
-        );
-      }
-      throw Exception('Invalid credentials');
-    }
-  }
-
-  static Future<AuthUser?> signUp(String email, String password) async {
-    try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      if (credential.user != null) {
-        return await getCurrentUser();
-      }
-      throw Exception('Sign up failed');
-    } catch (e) {
-      print('Firebase sign up error: $e');
-
-      // Fallback to mock authentication for development
-      if (email.isNotEmpty && password.length >= 6) {
-        await _prefs?.setString('user_email', email);
-        return AuthUser(
-          id: 'local_${email.hashCode}',
-          email: email,
-          firstName: 'New',
-          lastName: 'User',
-          phoneNumber: '+1234567890',
-          role: null,
-        );
-      }
-      throw Exception('Invalid signup data');
-    }
-  }
-
-  static Future<AuthUser?> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-      if (userCredential.user != null) {
-        return await getCurrentUser();
-      }
-      throw Exception('Google sign in failed');
-    } catch (e) {
-      print('Google sign in error: $e');
-      throw Exception('Google sign in failed: ${e.toString()}');
-    }
-  }
-
-  static Future<void> setRole(String userId, UserRole role) async {
-    try {
-      // Store role in local preferences with user ID
-      final currentUser = _auth.currentUser;
-      if (currentUser != null) {
-        await _prefs?.setString('user_role_${currentUser.uid}', role.name);
-      } else {
-        await _prefs?.setString('user_role', role.name);
-      }
-    } catch (e) {
-      print('Error setting role: $e');
-    }
-  }
-
-  static Future<void> signOut() async {
-    try {
-      await _auth.signOut();
-      await _googleSignIn.signOut();
-      // Clear local data
-      await _prefs?.clear();
-    } catch (e) {
-      print('Sign out error: $e');
-    }
-  }
-
-  // Phone authentication methods
-  static Future<void> sendPhoneVerification({
-    required String phoneNumber,
-    required Function(PhoneAuthCredential) verificationCompleted,
-    required Function(FirebaseAuthException) verificationFailed,
-    required Function(String, int?) codeSent,
-    required Function(String) codeAutoRetrievalTimeout,
-  }) async {
-    try {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: '+91$phoneNumber', // Indian phone numbers
-        verificationCompleted: verificationCompleted,
-        verificationFailed: verificationFailed,
-        codeSent: codeSent,
-        codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
-        timeout: Duration(seconds: 60),
-      );
-    } catch (e) {
-      print('Phone verification error: $e');
-      throw Exception('Failed to send verification code');
-    }
-  }
-
-  static Future<AuthUser?> signInWithPhone({
-    required String phoneNumber,
-    required String verificationCode,
-    required String verificationId,
-  }) async {
-    try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: verificationCode,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-      if (userCredential.user != null) {
-        // Create user with passenger role (since phone auth is for passengers)
-        await setRole(userCredential.user!.uid, UserRole.passenger);
-        return await getCurrentUser();
-      }
-      throw Exception('Phone sign in failed');
-    } catch (e) {
-      print('Phone sign in error: $e');
-      throw Exception('Phone sign in failed: ${e.toString()}');
-    }
-  }
-}
 
 class AuthUser {
   final String id;
@@ -268,5 +36,253 @@ class AuthUser {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       role: role ?? this.role,
     );
+  }
+}
+
+class AuthService {
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  static Future<void> init() async {
+    // Initialize any required services
+  }
+
+  static Future<AuthUser?> getCurrentUser() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        // Try to get user data from Firestore first
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+          final data = doc.data()!;
+          return AuthUser(
+            id: user.uid,
+            email: data['email'] ?? user.email ?? '',
+            firstName: data['firstName'] ?? '',
+            lastName: data['lastName'] ?? '',
+            phoneNumber: data['phoneNumber'] ?? '',
+            role: UserRole.values.firstWhere(
+              (e) => e.name == data['role'],
+              orElse: () => UserRole.passenger,
+            ),
+          );
+        } else {
+          // Fallback to basic user info
+          return AuthUser(
+            id: user.uid,
+            email: user.email ?? '',
+            firstName: '',
+            lastName: '',
+            phoneNumber: '',
+            role: UserRole.passenger, // Default role
+          );
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting current user: $e');
+      return null;
+    }
+  }
+
+  static Future<AuthUser?> signIn(String email, String password) async {
+    try {
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      final user = userCredential.user;
+      if (user != null) {
+        // Get user data from Firestore
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+          final data = doc.data()!;
+          return AuthUser(
+            id: user.uid,
+            email: data['email'] ?? user.email ?? '',
+            firstName: data['firstName'] ?? '',
+            lastName: data['lastName'] ?? '',
+            phoneNumber: data['phoneNumber'] ?? '',
+            role: UserRole.values.firstWhere(
+              (e) => e.name == data['role'],
+              orElse: () => UserRole.passenger,
+            ),
+          );
+        }
+      }
+      return null;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('Failed to sign in: $e');
+    }
+  }
+
+  static Future<AuthUser?> signUp(String email, String password) async {
+    try {
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      final user = userCredential.user;
+      if (user != null) {
+        // Create user document in Firestore
+        await _firestore.collection('users').doc(user.uid).set({
+          'id': user.uid,
+          'email': email,
+          'firstName': '',
+          'lastName': '',
+          'phoneNumber': '',
+          'role': UserRole.passenger.name, // Default role
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        
+        return AuthUser(
+          id: user.uid,
+          email: email,
+          firstName: '',
+          lastName: '',
+          phoneNumber: '',
+          role: UserRole.passenger,
+        );
+      }
+      return null;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('Failed to sign up: $e');
+    }
+  }
+
+  static Future<AuthUser?> signInWithGoogle() async {
+    try {
+      // Sign out first to ensure clean state
+      await _googleSignIn.signOut();
+      
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // User canceled the sign-in
+        return null;
+      }
+
+      final GoogleSignInAuthentication googleAuth = 
+          await googleUser.authentication;
+      
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user;
+      
+      if (user != null) {
+        // Check if user already exists in Firestore
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        
+        if (!doc.exists) {
+          // Create new user document with proper data
+          final firstName = user.displayName?.split(' ').first ?? '';
+          final lastName = (user.displayName?.split(' ').length ?? 0) > 1 
+              ? user.displayName!.split(' ').last 
+              : '';
+          
+          await _firestore.collection('users').doc(user.uid).set({
+            'id': user.uid,
+            'email': user.email ?? '',
+            'firstName': firstName,
+            'lastName': lastName,
+            'phoneNumber': '',
+            'role': UserRole.passenger.name, // Default role
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+        
+        // Get updated user data
+        final updatedDoc = await _firestore.collection('users').doc(user.uid).get();
+        if (updatedDoc.exists) {
+          final data = updatedDoc.data()!;
+          return AuthUser(
+            id: user.uid,
+            email: data['email'] ?? user.email ?? '',
+            firstName: data['firstName'] ?? '',
+            lastName: data['lastName'] ?? '',
+            phoneNumber: data['phoneNumber'] ?? '',
+            role: UserRole.values.firstWhere(
+              (e) => e.name == data['role'],
+              orElse: () => UserRole.passenger,
+            ),
+          );
+        } else {
+          // Fallback if document doesn't exist
+          return AuthUser(
+            id: user.uid,
+            email: user.email ?? '',
+            firstName: user.displayName?.split(' ').first ?? '',
+            lastName: user.displayName?.split(' ').last ?? '',
+            phoneNumber: '',
+            role: UserRole.passenger,
+          );
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Google sign in error: $e');
+      throw Exception('Failed to sign in with Google: $e');
+    }
+  }
+
+  static Future<void> signOut() async {
+    await _auth.signOut();
+    await _googleSignIn.signOut();
+  }
+
+  static Future<void> setRole(String userId, UserRole role) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'role': role.name,
+      });
+    } catch (e) {
+      print('Error setting user role: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> sendPhoneVerification({
+    required String phoneNumber,
+    required Function(PhoneAuthCredential) verificationCompleted,
+    required Function(FirebaseAuthException) verificationFailed,
+    required Function(String, int?) codeSent,
+    required Function(String) codeAutoRetrievalTimeout,
+  }) async {
+    await _auth.verifyPhoneNumber(
+      phoneNumber: '+91$phoneNumber',
+      verificationCompleted: verificationCompleted,
+      verificationFailed: verificationFailed,
+      codeSent: codeSent,
+      codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
+    );
+  }
+
+  static Future<User?> signInWithPhone({
+    required String phoneNumber,
+    required String verificationCode,
+    required String verificationId,
+  }) async {
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: verificationCode,
+      );
+      
+      final userCredential = await _auth.signInWithCredential(credential);
+      return userCredential.user;
+    } catch (e) {
+      print('Phone sign in error: $e');
+      rethrow;
+    }
   }
 }

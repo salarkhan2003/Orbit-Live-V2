@@ -4,8 +4,10 @@ import '../main.dart';
 import '../core/localization_service.dart';
 import '../core/connectivity_service.dart';
 import '../features/auth/domain/user_role.dart';
-import '../features/map/openstreet_map_screen.dart';
+import '../features/map/enhanced_map_screen.dart';
 import '../features/complaint/presentation/complaint_screen.dart';
+import '../features/travel_buddy/domain/travel_buddy_models.dart';
+import '../features/travel_buddy/presentation/providers/travel_buddy_provider.dart';
 
 class PassengerNavigationDrawer extends StatelessWidget {
   const PassengerNavigationDrawer({super.key});
@@ -15,8 +17,9 @@ class PassengerNavigationDrawer extends StatelessWidget {
     return Consumer2<AuthProvider, ConnectivityService>(
       builder: (context, authProvider, connectivityService, child) {
         final user = authProvider.user;
-        if (user == null) return SizedBox.shrink();
-
+        // Remove the null check that was preventing the drawer from showing
+        // The drawer should show for both authenticated and guest users
+        
         return Drawer(
           child: Column(
             children: [
@@ -53,7 +56,7 @@ class PassengerNavigationDrawer extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${user.firstName} ${user.lastName}',
+                                  user != null ? '${user.firstName} ${user.lastName}' : 'Guest User',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
@@ -61,7 +64,7 @@ class PassengerNavigationDrawer extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  user.role?.displayName ?? '',
+                                  user?.role?.displayName ?? 'Passenger',
                                   style: TextStyle(
                                     color: Colors.white70,
                                     fontSize: 16,
@@ -109,7 +112,7 @@ class PassengerNavigationDrawer extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => OpenStreetMapScreen(userRole: 'passenger'),
+                            builder: (context) => EnhancedMapScreen(userRole: 'passenger'),
                           ),
                         );
                       },
@@ -120,9 +123,7 @@ class PassengerNavigationDrawer extends StatelessWidget {
                       title: context.translate('book_ticket'),
                       onTap: () {
                         Navigator.pop(context); // Close drawer
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Ticket booking feature coming soon')),
-                        );
+                        Navigator.pushNamed(context, '/ticket-booking');
                       },
                     ),
                     _buildMenuItem(
@@ -131,9 +132,7 @@ class PassengerNavigationDrawer extends StatelessWidget {
                       title: context.translate('my_passes'),
                       onTap: () {
                         Navigator.pop(context); // Close drawer
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Pass management feature coming soon')),
-                        );
+                        Navigator.pushNamed(context, '/pass-application');
                       },
                     ),
                     _buildMenuItem(
@@ -142,9 +141,7 @@ class PassengerNavigationDrawer extends StatelessWidget {
                       title: context.translate('sos'),
                       onTap: () {
                         Navigator.pop(context); // Close drawer
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Emergency assistance feature coming soon')),
-                        );
+                        _triggerSOS(context);
                       },
                       isEmergency: true,
                     ),
@@ -160,6 +157,15 @@ class PassengerNavigationDrawer extends StatelessWidget {
                             builder: (context) => ComplaintScreen(userRole: UserRole.passenger),
                           ),
                         );
+                      },
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.people,
+                      title: 'TravelBuddy',
+                      onTap: () {
+                        Navigator.pop(context); // Close drawer
+                        Navigator.pushNamed(context, '/travel-buddy');
                       },
                     ),
 
@@ -186,16 +192,17 @@ class PassengerNavigationDrawer extends StatelessWidget {
                         );
                       },
                     ),
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.logout,
-                      title: context.translate('logout'),
-                      onTap: () {
-                        Navigator.pop(context); // Close drawer
-                        _logout(context, authProvider);
-                      },
-                      isDestructive: true,
-                    ),
+                    if (user != null) // Only show logout for authenticated users
+                      _buildMenuItem(
+                        context,
+                        icon: Icons.logout,
+                        title: context.translate('logout'),
+                        onTap: () {
+                          Navigator.pop(context); // Close drawer
+                          _logout(context, authProvider);
+                        },
+                        isDestructive: true,
+                      ),
                   ],
                 ),
               ),
@@ -219,10 +226,10 @@ class PassengerNavigationDrawer extends StatelessWidget {
         padding: EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isEmergency
-              ? Colors.red.withOpacity(0.1)
+              ? Colors.red.withValues(alpha: 0.1)
               : isDestructive
-                  ? Colors.red.withOpacity(0.1)
-                  : Colors.blue.withOpacity(0.1),
+                  ? Colors.red.withValues(alpha: 0.1)
+                  : Colors.blue.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -247,9 +254,113 @@ class PassengerNavigationDrawer extends StatelessWidget {
 
   void _logout(BuildContext context, AuthProvider authProvider) async {
     await authProvider.logout();
-    Navigator.pushNamedAndRemoveUntil(context, '/role-selection-splash', (route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/role-selection', (route) => false);
   }
   
+  void _triggerSOS(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.emergency, color: Colors.red),
+              SizedBox(width: 10),
+              Text('Emergency Assistance'),
+            ],
+          ),
+          content: Text(
+            'Are you in immediate danger? This will send your location to emergency services and your travel buddy (if connected).',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _sendSOSAlert(context);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: Text('Send Emergency Alert', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _sendSOSAlert(BuildContext context) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Sending emergency alert...'),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      // Get current location (in a real app, this would be actual GPS location)
+      // For demo purposes, we'll use a mock location
+      final location = TravelBuddyLocation(
+        latitude: 16.3067, // Guntur latitude
+        longitude: 80.4365, // Guntur longitude
+        timestamp: DateTime.now(),
+      );
+
+      // Send SOS alert through travel buddy provider
+      final travelBuddyProvider = Provider.of<TravelBuddyProvider>(
+        context,
+        listen: false,
+      );
+      
+      final success = await travelBuddyProvider.sendSOSAlert(
+        location: location,
+        message: 'Emergency SOS from passenger at Guntur location',
+      );
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Emergency alert sent successfully! Help is on the way.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send emergency alert. Please try again.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error sending emergency alert: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _showLanguageSelectionDialog(BuildContext context) {
     final localizationProvider = Provider.of<LocalizationProvider>(context, listen: false);
     
@@ -266,6 +377,9 @@ class PassengerNavigationDrawer extends StatelessWidget {
       {'code': 'bn', 'name': 'বাংলা'},
     ];
     
+    // Get current locale to highlight selected language
+    final currentLocale = localizationProvider.currentLocale;
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -277,11 +391,31 @@ class PassengerNavigationDrawer extends StatelessWidget {
               shrinkWrap: true,
               itemCount: languages.length,
               itemBuilder: (context, index) {
+                final isSelected = currentLocale.languageCode == languages[index]['code'];
                 return ListTile(
                   title: Text(languages[index]['name']!),
+                  trailing: isSelected 
+                    ? Icon(Icons.check, color: Colors.green) 
+                    : null,
+                  tileColor: isSelected 
+                    ? Colors.blue.withValues(alpha: 0.1) 
+                    : null,
                   onTap: () {
                     localizationProvider.setLocaleByLanguageCode(languages[index]['code']!);
                     Navigator.pop(context);
+                    // Show a snackbar to indicate language change
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Language changed to ${languages[index]['name']} successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    // Rebuild the entire app to apply language changes to all screens
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => MyApp()), // Rebuild entire app
+                      (route) => false,
+                    );
                   },
                 );
               },

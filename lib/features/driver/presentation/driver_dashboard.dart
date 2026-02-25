@@ -1,13 +1,27 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../shared/driver_navigation_drawer.dart';
 import '../../../core/localization_service.dart';
 import '../../../core/connectivity_service.dart';
-import '../../map/openstreet_map_screen.dart';
+import '../../../services/location_permission_manager.dart';
+import '../../../services/live_telemetry_service.dart';
+
+import '../../map/enhanced_map_screen.dart';
+import 'driver_trip_screen.dart';
 
 class DriverDashboard extends StatefulWidget {
-  const DriverDashboard({super.key});
+  final String? customVehicleId;
+  final String? customDriverId;
+  
+  const DriverDashboard({
+    super.key,
+    this.customVehicleId,
+    this.customDriverId,
+  });
 
   @override
   _DriverDashboardState createState() => _DriverDashboardState();
@@ -16,24 +30,91 @@ class DriverDashboard extends StatefulWidget {
 class _DriverDashboardState extends State<DriverDashboard>
     with TickerProviderStateMixin {
   bool _isTripActive = false;
-  String _currentRoute = 'Route 101';
-  int _passengerCount = 0;
+  bool _isLoading = false;
   int _availableSeats = 30; // Default available seats
+  String _currentRoute = 'Route 101'; // Add this field
+  final String _currentRouteId = 'RJ-12';
+  int _passengerCount = 0; // Add this field
   late AnimationController _animationController;
-  late Animation<double> _animation;
+  
+  String? _currentTripId;
+  
+  // Driver/Vehicle info - Generate unique IDs for each device
+  late final String _vehicleId;
+  late final String _driverId;
 
   @override
   void initState() {
     super.initState();
+    
+    // Use provided vehicle ID or generate a unique one
+    if (widget.customVehicleId != null && widget.customVehicleId!.isNotEmpty) {
+      _vehicleId = widget.customVehicleId!;
+      _driverId = widget.customDriverId ?? 'DRIVER-${widget.customVehicleId!.split('-').last}';
+    } else {
+      // Generate unique APSRTC vehicle ID if none provided
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final deviceHash = timestamp.hashCode.abs().toString().substring(0, 3);
+      _vehicleId = 'APSRTC-VEH-$deviceHash';
+      _driverId = 'DRIVER-$deviceHash';
+    }
+    
+    debugPrint('Vehicle ID: $_vehicleId');
+    debugPrint('Driver ID: $_driverId');
+    
     _animationController = AnimationController(
       duration: Duration(milliseconds: 500),
       vsync: this,
     );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
+    _ensureDriverRole();
   }
+  
+  /// Ensure the current user has driver role set in Firestore (HACKATHON MODE - bypassed)
+  Future<void> _ensureDriverRole() async {
+    // HACKATHON MODE: Guest drivers allowed without auth/role check.
+    // TODO: Reinstate driver authentication for production.
+    debugPrint('Guest mode: Skipping authentication');
+    return; // Skip all authentication checks
+    
+    /* COMMENTED OUT FOR DEMO MODE
+    try {
+      await RoleManagementService.ensureUserRole(UserRole.driver);
+      
+      // Also update local auth provider if user exists
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final user = authProvider.user;
+      
+      if (user != null && user.role != UserRole.driver) {
+        await authProvider.setRole(UserRole.driver);
+        debugPrint('✅ Local user role updated to driver');
+      } else if (user == null) {
+        debugPrint('✅ Running in guest mode - no user to update');
+      }
+    } catch (e) {
+      debugPrint('❌ Error ensuring driver role: $e');
+      // Don't rethrow - allow guest mode to continue
+      debugPrint('🔄 Continuing in guest mode...');
+    }
+    */
+  }
+  
+
+
+
+
+
+  /// Validate APSRTC vehicle ID format
+  bool _isValidVehicleId(String vehicleId) {
+    if (vehicleId.isEmpty) return false;
+    
+    // Must start with APSRTC-VEH- and have at least 3 characters after
+    final regex = RegExp(r'^APSRTC-VEH-[A-Z0-9]{3,}$');
+    return regex.hasMatch(vehicleId.toUpperCase());
+  }
+
+
+  
+
 
   @override
   void dispose() {
@@ -78,7 +159,7 @@ class _DriverDashboardState extends State<DriverDashboard>
           ),
         ],
         elevation: 5,
-        shadowColor: Colors.green.withOpacity(0.3),
+        shadowColor: Colors.green.withValues(alpha: 0.3)
       ),
       drawer: DriverNavigationDrawer(),
       body: SingleChildScrollView(
@@ -107,7 +188,6 @@ class _DriverDashboardState extends State<DriverDashboard>
 
   void _showConnectivityStatus(BuildContext context, ConnectivityService connectivityService) {
     final isLowBandwidth = connectivityService.shouldUseLowBandwidthMode();
-    final connectionType = connectivityService.connectionStatus.toString().split('.').last;
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -140,8 +220,8 @@ class _DriverDashboardState extends State<DriverDashboard>
             boxShadow: [
               BoxShadow(
                 color: _isTripActive
-                    ? Colors.green.withOpacity(0.3)
-                    : Colors.grey.withOpacity(0.3),
+                    ? Colors.green.withValues(alpha: 0.3)
+                    : Colors.grey.withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: Offset(0, 5),
               ),
@@ -154,7 +234,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(15),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -181,13 +261,34 @@ class _DriverDashboardState extends State<DriverDashboard>
                         isLowBandwidth
                             ? 'Optimized for low bandwidth'
                             : _isTripActive
-                                ? 'Currently serving passengers'
+                                ? 'Live: Broadcasting to Control Room'
                                 : 'Ready to start your next trip',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 15,
                         ),
                       ),
+                      SizedBox(height: 8),
+                      // Simple status line
+                      Text(
+                        'Vehicle: $_vehicleId | Route: $_currentRouteId',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (_isTripActive) ...[
+                        SizedBox(height: 4),
+                        Text(
+                          'Status: Live GPS Tracking Active',
+                          style: TextStyle(
+                            color: Colors.greenAccent,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -206,7 +307,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -222,7 +323,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.control_camera, color: Colors.blue, size: 25),
@@ -243,10 +344,19 @@ class _DriverDashboardState extends State<DriverDashboard>
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isTripActive ? null : _startTrip,
-                    icon: Icon(Icons.play_arrow, size: 22),
+                    onPressed: (_isTripActive || _isLoading) ? null : _startTrip,
+                    icon: _isLoading && !_isTripActive
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Icon(Icons.play_arrow, size: 22),
                     label: Text(
-                      context.translate('start_trip'),
+                      _isLoading && !_isTripActive ? 'Starting...' : context.translate('start_trip'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -260,16 +370,26 @@ class _DriverDashboardState extends State<DriverDashboard>
                         borderRadius: BorderRadius.circular(15),
                       ),
                       elevation: 5,
+                      disabledBackgroundColor: Colors.grey[300],
                     ),
                   ),
                 ),
                 SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isTripActive ? _stopTrip : null,
-                    icon: Icon(Icons.stop, size: 22),
+                    onPressed: (_isTripActive && !_isLoading) ? _stopTrip : null,
+                    icon: _isLoading && _isTripActive
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Icon(Icons.stop, size: 22),
                     label: Text(
-                      context.translate('stop_trip'),
+                      _isLoading && _isTripActive ? 'Ending...' : context.translate('stop_trip'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -283,11 +403,15 @@ class _DriverDashboardState extends State<DriverDashboard>
                         borderRadius: BorderRadius.circular(15),
                       ),
                       elevation: 5,
+                      disabledBackgroundColor: Colors.grey[300],
                     ),
                   ),
                 ),
               ],
             ),
+            
+
+            
             if (_isTripActive) ...[
               SizedBox(height: 20),
               Container(
@@ -321,7 +445,7 @@ class _DriverDashboardState extends State<DriverDashboard>
               SizedBox(height: 20),
               _buildGenerateTicketQR(context),
             ],
-          ],
+          ]
         ),
       ),
     );
@@ -334,7 +458,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: Offset(0, 5),
           ),
@@ -430,7 +554,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: Offset(0, 5),
           ),
@@ -546,7 +670,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -562,7 +686,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.route, color: Colors.blue, size: 25),
@@ -711,7 +835,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -727,7 +851,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.1),
+                    color: Colors.purple.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.group, color: Colors.purple, size: 25),
@@ -818,7 +942,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
+            color: Colors.purple.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: Offset(0, 5),
           ),
@@ -850,20 +974,20 @@ class _DriverDashboardState extends State<DriverDashboard>
             Expanded(
               child: _buildActionCard(
                 context,
-                title: 'Live Tracking',
-                icon: Icons.map,
-                color: Colors.green,
-                onTap: () => _navigateToLiveTracking(),
+                title: 'GPS Telemetry',
+                icon: Icons.cell_tower,
+                color: Colors.teal,
+                onTap: () => _navigateToTripScreen(),
               ),
             ),
             SizedBox(width: 15),
             Expanded(
               child: _buildActionCard(
                 context,
-                title: 'Trip History',
-                icon: Icons.history,
-                color: Colors.blue,
-                onTap: () => _navigateToTripHistory(),
+                title: 'Live Tracking',
+                icon: Icons.map,
+                color: Colors.green,
+                onTap: () => _navigateToLiveTracking(),
               ),
             ),
           ],
@@ -874,13 +998,27 @@ class _DriverDashboardState extends State<DriverDashboard>
             Expanded(
               child: _buildActionCard(
                 context,
+                title: 'Trip History',
+                icon: Icons.history,
+                color: Colors.blue,
+                onTap: () => _navigateToTripHistory(),
+              ),
+            ),
+            SizedBox(width: 15),
+            Expanded(
+              child: _buildActionCard(
+                context,
                 title: 'Vehicle Check',
                 icon: Icons.directions_bus,
                 color: Colors.orange,
                 onTap: () => _navigateToVehicleCheck(),
               ),
             ),
-            SizedBox(width: 15),
+          ],
+        ),
+        SizedBox(height: 15),
+        Row(
+          children: [
             Expanded(
               child: _buildActionCard(
                 context,
@@ -890,6 +1028,8 @@ class _DriverDashboardState extends State<DriverDashboard>
                 onTap: () => _navigateToReports(),
               ),
             ),
+            SizedBox(width: 15),
+            Expanded(child: SizedBox()), // Placeholder for alignment
           ],
         ),
       ],
@@ -915,7 +1055,7 @@ class _DriverDashboardState extends State<DriverDashboard>
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: Offset(0, 5),
             ),
@@ -929,7 +1069,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 padding: EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
+                    colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.2)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -964,7 +1104,7 @@ class _DriverDashboardState extends State<DriverDashboard>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -980,7 +1120,7 @@ class _DriverDashboardState extends State<DriverDashboard>
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.analytics, color: Colors.blue, size: 25),
@@ -1038,7 +1178,7 @@ class _DriverDashboardState extends State<DriverDashboard>
           padding: EdgeInsets.all(15),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
+              colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.2)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -1232,40 +1372,132 @@ class _DriverDashboardState extends State<DriverDashboard>
     );
   }
 
-  void _startTrip() {
-    setState(() {
-      _isTripActive = true;
-      _passengerCount = 0;
-      _availableSeats = 30;
-    });
+  Future<void> _startTrip() async {
+    setState(() => _isLoading = true);
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Trip started successfully!'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+    try {
+      debugPrint('[TRIP] Starting trip for vehicle: $_vehicleId');
+      
+      // 1. Validate vehicle ID format
+      if (!_isValidVehicleId(_vehicleId)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invalid vehicle ID: $_vehicleId. Must be in format APSRTC-VEH-XXX'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // 2. Check location permissions
+      final hasPermission = await LocationPermissionManager.ensureLocationPermissions(context);
+      if (!hasPermission) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location permission required for live tracking'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
+      // 3. Get GPS position
+      debugPrint('[TRIP] Getting GPS position...');
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
         ),
-      ),
-    );
+      );
+      
+      debugPrint('[TRIP] GPS position: ${position.latitude}, ${position.longitude}');
+      
+      // 4. Start live telemetry tracking
+      final success = await LiveTelemetryService.startTracking(
+        vehicleId: _vehicleId,
+        routeId: _currentRouteId,
+      );
+      
+      if (success) {
+        setState(() {
+          _isTripActive = true;
+          _currentTripId = 'TRIP-${DateTime.now().millisecondsSinceEpoch}';
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Trip started! Live tracking active'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        debugPrint('[TRIP] Trip started successfully for $_vehicleId');
+      } else {
+        throw Exception('Failed to start GPS tracking service');
+      }
+    } catch (e) {
+      debugPrint('[TRIP] Start trip error: $e');
+      
+      String errorMessage = 'Failed to start trip';
+      if (e.toString().contains('Location permissions')) {
+        errorMessage = 'Location access required. Please enable GPS permissions.';
+      } else if (e.toString().contains('GPS')) {
+        errorMessage = 'GPS signal not found. Please ensure location services are enabled.';
+      } else {
+        errorMessage = 'Failed to start trip: ${e.toString()}';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: () => _startTrip(),
+          ),
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
-  void _stopTrip() {
-    setState(() {
-      _isTripActive = false;
-    });
+  Future<void> _stopTrip() async {
+    if (_currentTripId == null) return;
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Trip stopped. Data saved.'),
-        backgroundColor: Colors.blue,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+    setState(() => _isLoading = true);
+    
+    try {
+      debugPrint('[TRIP] Stopping trip for vehicle: $_vehicleId');
+      
+      // Stop live telemetry tracking
+      await LiveTelemetryService.stopTracking();
+      
+      setState(() {
+        _isTripActive = false;
+        _currentTripId = null;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Trip ended successfully'),
+          backgroundColor: Colors.green,
         ),
-      ),
-    );
+      );
+      
+      debugPrint('[TRIP] Trip stopped successfully for $_vehicleId');
+    } catch (e) {
+      debugPrint('[TRIP] Stop trip error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to end trip: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   String _getTripDuration() {
@@ -1273,11 +1505,25 @@ class _DriverDashboardState extends State<DriverDashboard>
     return '25 mins';
   }
 
+  void _navigateToTripScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DriverTripScreen(
+          vehicleId: _vehicleId,
+          driverId: _driverId,
+          routeId: _currentRouteId,
+          routeName: _currentRoute,
+        ),
+      ),
+    );
+  }
+
   void _navigateToLiveTracking() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OpenStreetMapScreen(userRole: 'driver'),
+        builder: (context) => EnhancedMapScreen(userRole: 'driver'),
       ),
     );
   }
@@ -1556,4 +1802,6 @@ class _DriverDashboardState extends State<DriverDashboard>
       ),
     );
   }
+
+
 }

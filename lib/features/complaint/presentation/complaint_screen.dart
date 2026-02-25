@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../core/localization_service.dart';
 import '../../auth/domain/user_role.dart';
+import '../../../core/localization_service.dart';
 
 class ComplaintScreen extends StatefulWidget {
   final UserRole userRole;
@@ -57,6 +56,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
       appBar: AppBar(
         title: Text(context.translate('raise_complaint')),
         backgroundColor: widget.userRole == UserRole.passenger ? Colors.blue : Colors.green,
+        foregroundColor: Colors.white, // Ensure title is visible
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -81,13 +81,15 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
+                  color: Colors.black, // Ensure visibility
                 ),
               ),
               SizedBox(height: 15),
               TextFormField(
                 controller: _busNumberController,
                 decoration: InputDecoration(
-                  hintText: 'Enter bus number (e.g., KA-01-AB-1234)',
+                  labelText: 'Bus Number',
+                  hintText: 'Enter bus number',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -100,10 +102,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter bus number';
                   }
-                  // Simple validation for bus number format
-                  if (!RegExp(r'^[A-Z0-9]{2}-[0-9]{2}-[A-Z]{1,2}-[0-9]{4}$').hasMatch(value)) {
-                    return 'Please enter a valid bus number format (e.g., KA-01-AB-1234)';
-                  }
+                  // Allow any format for bus number - no restrictions
                   return null;
                 },
               ),
@@ -114,12 +113,14 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
+                  color: Colors.black, // Ensure visibility
                 ),
               ),
               SizedBox(height: 15),
               TextFormField(
                 controller: _sourceController,
                 decoration: InputDecoration(
+                  labelText: 'Source',
                   hintText: 'Enter source location',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -143,12 +144,14 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
+                  color: Colors.black, // Ensure visibility
                 ),
               ),
               SizedBox(height: 15),
               TextFormField(
                 controller: _destinationController,
                 decoration: InputDecoration(
+                  labelText: 'Destination',
                   hintText: 'Enter destination location',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -171,12 +174,14 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
+                  color: Colors.black, // Ensure visibility
                 ),
               ),
               SizedBox(height: 15),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: InputDecoration(
+                  labelText: 'Category',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -185,11 +190,21 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                     vertical: 15,
                   ),
                 ),
-                hint: Text('Choose a category'),
+                hint: Text(
+                  'Choose a category',
+                  style: TextStyle(
+                    color: Colors.grey, // Ensure visibility
+                  ),
+                ),
                 items: _categories.map((category) {
                   return DropdownMenuItem(
                     value: category['value'],
-                    child: Text(category['label']!),
+                    child: Text(
+                      category['label']!,
+                      style: TextStyle(
+                        color: Colors.black, // Ensure visibility
+                      ),
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -210,6 +225,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
+                  color: Colors.black, // Ensure visibility
                 ),
               ),
               SizedBox(height: 15),
@@ -217,6 +233,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 controller: _descriptionController,
                 maxLines: 5,
                 decoration: InputDecoration(
+                  labelText: 'Description',
                   hintText: 'Describe your complaint in detail...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -244,6 +261,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     backgroundColor: widget.userRole == UserRole.passenger ? Colors.blue : Colors.green,
+                    foregroundColor: Colors.white, // Ensure text is visible
                   ),
                   child: Text(
                     'Submit Complaint',
@@ -264,26 +282,170 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
   void _submitComplaint() {
     if (_formKey.currentState!.validate()) {
-      // In a real app, you would send this data to your backend
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Complaint submitted successfully!'),
-          backgroundColor: widget.userRole == UserRole.passenger ? Colors.blue : Colors.green,
-        ),
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    widget.userRole == UserRole.passenger ? Colors.blue : Colors.green,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Submitting your complaint...',
+                  style: TextStyle(
+                    color: Colors.black, // Ensure visibility
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
-      
-      // Clear the form
-      setState(() {
-        _selectedCategory = null;
-        _descriptionController.clear();
-        _busNumberController.clear();
-        _sourceController.clear();
-        _destinationController.clear();
-      });
-      
-      // Navigate back after a short delay
+
+      // Simulate API call delay
       Future.delayed(Duration(seconds: 2), () {
-        Navigator.pop(context);
+        Navigator.pop(context); // Close loading dialog
+        
+        // Generate complaint ID
+        String complaintId = 'CMP${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+        
+        // Show success dialog with complaint details
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 32,
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Success!',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your complaint has been successfully submitted and registered with our system.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black, // Ensure visibility
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Complaint Details:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.black, // Ensure visibility
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'ID: $complaintId',
+                          style: TextStyle(
+                            color: Colors.black, // Ensure visibility
+                          ),
+                        ),
+                        Text(
+                          'Bus: ${_busNumberController.text}',
+                          style: TextStyle(
+                            color: Colors.black, // Ensure visibility
+                          ),
+                        ),
+                        Text(
+                          'Route: ${_sourceController.text} → ${_destinationController.text}',
+                          style: TextStyle(
+                            color: Colors.black, // Ensure visibility
+                          ),
+                        ),
+                        Text(
+                          'Category: ${_categories.firstWhere((cat) => cat['value'] == _selectedCategory)['label']}',
+                          style: TextStyle(
+                            color: Colors.black, // Ensure visibility
+                          ),
+                        ),
+                        Text(
+                          'Status: Under Review',
+                          style: TextStyle(
+                            color: Colors.black, // Ensure visibility
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'We will investigate your complaint and get back to you within 24-48 hours. You can track the status using the complaint ID.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close success dialog
+                    
+                    // Clear the form
+                    setState(() {
+                      _selectedCategory = null;
+                      _descriptionController.clear();
+                      _busNumberController.clear();
+                      _sourceController.clear();
+                      _destinationController.clear();
+                    });
+                    
+                    // Navigate back to previous screen
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      color: widget.userRole == UserRole.passenger ? Colors.blue : Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
       });
     }
   }
